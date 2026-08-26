@@ -15,7 +15,7 @@ if (container) {
       <Provider store={store}>
         <App />
       </Provider>
-    </StrictMode>,
+    </StrictMode>
   )
 } else {
   throw new Error(

@@ -1,75 +1,56 @@
-# React + TypeScript + Vite
+# Movie Slider
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Movie Slider - это одностраничное приложение для поиска вдохновения и просмотра популярных фильмов. На главном экране пользователь видит кинематографичный слайдер с постерами, выбирает фильм и открывает его описание и дополнительные изображения. Каталог загружается из TMDB API и разделен на страницы, между которыми можно перемещаться с помощью кнопок навигации.
 
-Currently, two official plugins are available:
+Это мой pet-проект, в котором я отрабатываю создание современных интерфейсов на React и TypeScript: работу с асинхронными данными, глобальным состоянием, переиспользуемыми компонентами и адаптивной версткой.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Демо
 
-## React Compiler
+Проект будет доступен онлайн через GitHub Pages.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+https://rukekarua.github.io/movies/
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Возможности
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- загрузка популярных фильмов из TMDB API;
+- интерактивный слайдер с постерами фильмов;
+- переход между страницами каталога;
+- циклическая навигация: после последней страницы открывается первая;
+- просмотр дополнительной информации и изображений фильма в модальном окне;
+- динамический фон из постеров;
+- адаптивная верстка для разных размеров экрана.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+## Технологии
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- React 19;
+- TypeScript;
+- Vite;
+- Redux Toolkit и React Redux;
+- Tailwind CSS;
+- Swiper;
+- React Fast Marquee;
+- TMDB API.
 
-```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Структура проекта
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- `src/components` - переиспользуемые компоненты интерфейса;
+- `src/Hooks` - кастомные хуки для загрузки данных и изображений;
+- `src/store` - Redux-состояние приложения;
+- `src/assets` - локальные ресурсы проекта.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## План развития
 
-```
+- добавить поиск фильмов;
+- добавить состояния загрузки и обработки ошибок;
+- улучшить доступность элементов управления;
+- добавить тесты для основных компонентов и пользовательских сценариев.
+- создать систему профилей, в функционале которых будет:
+    1. Добавить фильм/сериал/серию сериала в избранное
+    2. Создать собственный список сериалов/фильмов
+    3...
+
+## Источник данных
+
+Информация о фильмах предоставляется сервисом [The Movie Database (TMDB)](https://www.themoviedb.org/). Проект не связан с TMDB и создан исключительно в учебных и демонстрационных целях.
