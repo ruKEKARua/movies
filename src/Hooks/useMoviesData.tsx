@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { changeSliderPosition } from "../store/sliderMove";
+import { fetchTmdb } from "../api/tmdb";
 
 
 type MovieData = {
@@ -22,16 +23,7 @@ const useMoviesData = (page:number=1) => {
 
     useEffect(() => {
 
-        //TMDB
-        const options = {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',     
-                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhMGNkYzg4ZmMzYmFhMWY1OGY0YWVlMmJhNjc1ODVmMCIsIm5iZiI6MTc2Nzk5NzYyNS44NDE5OTk4LCJzdWIiOiI2OTYxODBiOTBmN2YxZTExYmZiZDMyN2UiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.b7jGWGbG_wwjO-NAAQY0cvT5opshPJHLLRo6AYfb6kY'}
-        };
-        
-        fetch(`https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=ru-ru&page=${page}&sort_by=vote_count.desc`, options)
-            .then(res => res.json())
+        fetchTmdb<{ results: MovieData[] }>(`/discover/movie?include_adult=false&include_video=false&language=ru-ru&page=${page}&sort_by=vote_count.desc`)
             .then(res => {
                 setData(res.results)
             })

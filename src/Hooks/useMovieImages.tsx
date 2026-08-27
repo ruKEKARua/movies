@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { fetchTmdb } from "../api/tmdb";
 
 
 type MovieImageData = {
@@ -23,16 +24,7 @@ const useMovieImages = (movie_id: number) => {
 
     useEffect(() => {
 
-        //TMDB
-        const options = {
-            method: 'GET',
-            headers: {
-                accept: 'application/json',     
-                Authorization: 'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJhMGNkYzg4ZmMzYmFhMWY1OGY0YWVlMmJhNjc1ODVmMCIsIm5iZiI6MTc2Nzk5NzYyNS44NDE5OTk4LCJzdWIiOiI2OTYxODBiOTBmN2YxZTExYmZiZDMyN2UiLCJzY29wZXMiOlsiYXBpX3JlYWQiXSwidmVyc2lvbiI6MX0.b7jGWGbG_wwjO-NAAQY0cvT5opshPJHLLRo6AYfb6kY'}
-        };
-        
-        fetch(`https://api.themoviedb.org/3/movie/${movie_id}/images?include_image_language=ru`, options)
-            .then(res => res.json())
+        fetchTmdb<{ backdrops: MovieImageData[]; posters: MovieImageData[] }>(`/movie/${movie_id}/images?include_image_language=ru`)
             .then(res => {
                 //const data1 = res.logos;
                 const data2 = res.backdrops;
