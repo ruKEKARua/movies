@@ -172,9 +172,12 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                             }
 
                             const russianName = personVariables.name;
+                            const originalName = personVariables.original_name;
                             const description = personVariables.known_for_department;
                             const image = personVariables.profile_path;
                             const movieId = personVariables.known_for[0]?.id;
+
+                            const placeholderImage = `https://placehold.co/780x1170?text=${russianName}`;
 
                             return(
                                 <SwiperSlide key={key} className="p-5">
@@ -182,14 +185,14 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                                     <div className="w-60 h-120 m-auto gap-5 flex flex-col justify-center items-center" key={media.id} >
 
                                         <p className="text-white">
-                                            {personVariables.original_name ? personVariables.name : personVariables.original_name}
+                                            {russianName ? russianName : originalName}
                                         </p>
 
                                         <div className="min-w-50 min-h-80 m-auto rounded-2xl"
                                         style={{boxShadow: `
                                             7px 16px 26px 25px rgba(0,0,0,0.7)
                                             `}}>
-                                        <img src={personVariables.profile_path} className="min-w-50 min-h-80 m-auto rounded-2xl"/>
+                                        <img src={personVariables.profile_path == 'https://image.tmdb.org/t/p/w780/null' ? placeholderImage : image} className="min-w-50 min-h-80 m-auto rounded-2xl"/>
                                         <div className="
                                             text-[#ffeb3b] text-5xl absolute top-11 right-15
                                             ">*</div>
