@@ -18,7 +18,7 @@ function corsHeaders(origin: string | null): HeadersInit {
 }
 
 export default {
-  async fetch(request, env: { TMDB_TOKEN: string }): Promise<Response> {
+  async fetch(request: Request, env: { TMDB_TOKEN: string }): Promise<Response> {
     const origin = request.headers.get("Origin");
     const headers = corsHeaders(origin);
 
@@ -43,9 +43,7 @@ export default {
       });
     }
 
-    const isAllowedPath = /^\/(movie\/popular|discover\/movie|movie\/\d+|movie\/\d+\/images)$/.test(tmdbPath);
-
-    if (!isAllowedPath) {
+    if (!tmdbPath.startsWith("/") || tmdbPath === "/") {
       return new Response("Not found", { status: 404, headers });
     }
 
