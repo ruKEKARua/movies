@@ -10,10 +10,12 @@ type InfiniteSliderProps = {
   movie_ID: number;
 };
 
+type MovieImagesType = "posters" | "backdrops" | "logos";
+
 export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
 
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
-    const [postersType, setPostersType] = useState<string>('posters');
+    const [postersType, setPostersType] = useState<MovieImagesType>('posters');
 
     const movieImages = useMovieImages({
         movie_id: movie_ID,

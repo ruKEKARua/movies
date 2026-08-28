@@ -22,11 +22,12 @@ type MovieImagesResponse = {
   posters: MovieImageData[];
 };
 
+type MovieImagesType = keyof MovieImagesResponse;   
 
 type MovieImagesProps = {
 
     movie_id: number; 
-    postersType: string;
+    postersType: MovieImagesType;
 
 }
 
