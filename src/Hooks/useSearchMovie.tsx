@@ -36,7 +36,7 @@ type KnownForMovie = {
 };
 
 type MovieSliderProps = {
-  media: Media[];
+  results: Media[];
 };
 
 const useSearchMovie = (searchValue: string) => {

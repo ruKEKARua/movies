@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { setPage } from './store/pageNumber';
 import BackgroundPosters from './components/Background/BackgroundPosters';
-import useGetMovieInfo from './Hooks/useGetMovieInfo';
+// import useGetMovieInfo from './Hooks/useGetMovieInfo';
 import { setSearchBarValue } from './store/searchBar';
 import useSearchMovie from './Hooks/useSearchMovie';
 
@@ -25,7 +25,7 @@ function App() {
     
     
     const moviesArray = useMoviesData(page);
-    const movieData = useGetMovieInfo(19995);
+    // const movieData = useGetMovieInfo(19995);
 
     const nextPage = () => {
 

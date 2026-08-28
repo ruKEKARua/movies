@@ -50,12 +50,10 @@ type MovieSliderProps = {
 };
 
 
-// Как мы укажем тип MovieSliderProps для пропсов функции?
 export function MovieSlider({ media }: MovieSliderProps ) {
     
     const dispatch = useDispatch();
     
-    // приходит в переменню true или false
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
     const page = useSelector((state: RootState) => state.numberOfPageInSlider.value)
     
