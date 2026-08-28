@@ -5,6 +5,8 @@ import type { RootState } from "../../store/store";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import useMovieImages from "../../Hooks/useMovieImages";
+import "swiper/css";
+import "swiper/css/navigation";
 
 type InfiniteSliderProps = {
   movie_ID: number;
@@ -16,6 +18,7 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
 
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
     const [postersType, setPostersType] = useState<MovieImagesType>('posters');
+    const isBackdrop = postersType === "backdrops";
 
     const movieImages = useMovieImages({
         movie_id: movie_ID,
@@ -36,10 +39,11 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
     }, [postersType])
 
     return (
-        <div  className={`
-        w-${postersType === 'backdrops' ? '150' : '130'} h-${postersType === 'backdrops' ? '100' : '170'} rounded-2xl bg-white overflow-hidden scrollbar-none dark:bg-slate-900 flex justify-center items-center`}>
-
-
+        <div
+          className={`${
+            isBackdrop ? "w-130 h-100" : "w-130 h-170"
+          } rounded-2xl overflow-hidden bg-white dark:bg-slate-900`}
+        >
             <Swiper
                 modules={[Navigation, FreeMode, Mousewheel]}
                 slidesPerView={1}
@@ -49,7 +53,7 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
                 rewind={true}
                 mousewheel={true}
 
-                direction="vertical"
+                direction={isBackdrop ? 'horizontal' : 'vertical'}
                 enabled={isModalOpen}
 
                 freeMode={{momentum:false, enabled:true}}
@@ -67,13 +71,9 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
                             <SwiperSlide key={index}>
                             
                                 <div className="size-full">
-                                    <img src={poster} loading="lazy" decoding="async" onChange={()=> {
-
-                                    }}
+                                    <img src={poster} loading="lazy" decoding="async"
                                     className={`
                                         w-full h-full m-auto object-cover
-                                        
-                                        
                                     `} />
                                 </div>
 
@@ -85,8 +85,8 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
             </Swiper>
 
                 
-            <div className="absolute right-110 top-65 flex justify-between flex-col gap-20 w-20 h-30">
-                <div className="text-white text-xl flex justify-center items-center gap-10 absolute -top-75 left-25 w-100">
+            <div className="absolute top-0 flex justify-between flex-col gap-20 w-full h-full">
+                <div className="text-white text-xl flex justify-center items-center gap-10 absolute -top-10 left-15 w-100">
                     <Button className={
                         `${ postersType === 'logos' ? 'text-emerald-600 hover:text-emerald-600 scale-110' : 'scale-90'}
                             hover:underline transition delay-100 
@@ -106,39 +106,46 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
                         } 
                         label="Постеры" onClick={() => setPostersType("posters")}/>
                 </div> 
-                <Button
+                <div
+                    className={` absolute z-10 flex justify-between items-center flex-col
+                        ${isBackdrop ? 'w-20 h-50 rotate-270 left-50 top-90' 
+                            : '-left-20 top-70 w-20 h-50'}
+                    `}
+                    >
+                    <Button
 
-                    children={
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8 5L15 12L8 19" 
-                                stroke="#61b28a" 
-                                strokeWidth="3" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round"
-                                />
-                        </svg>}
-                    className="
-                        rotate-270
-                        rounded-full w-20 h-10 
-                        flex justify-center items-center 
-                        text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 prevButton2"
-                    />
-                <Button
-                    children={
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8 5L15 12L8 19" 
-                                stroke="#61b28a" 
-                                strokeWidth="3" 
-                                strokeLinecap="round" 
-                                strokeLinejoin="round"
-                                />
-                        </svg>}
-                    className="
-                        rotate-90
-                        rounded-full w-20 h-10 
-                        flex justify-center items-center 
-                        text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 nextButton2"
-                    />
+                        children={
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 5L15 12L8 19" 
+                                    stroke="#61b28a" 
+                                    strokeWidth="3" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    />
+                            </svg>}
+                        className="
+                            rotate-270
+                            rounded-full w-25 h-10 
+                            flex justify-center items-center 
+                            text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 prevButton2"
+                        />
+                    <Button
+                        children={
+                            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path d="M8 5L15 12L8 19" 
+                                    stroke="#61b28a" 
+                                    strokeWidth="3" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round"
+                                    />
+                            </svg>}
+                        className="
+                            rotate-90
+                            rounded-full w-25 h-10 
+                            flex justify-center items-center 
+                            text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 nextButton2"
+                        />
+                </div>
             </div>
 
         
