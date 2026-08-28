@@ -43,7 +43,7 @@ export default {
       });
     }
 
-    const isAllowedPath = /^\/(movie\/popular|discover\/movie|movie\/\d+\/images)$/.test(tmdbPath);
+    const isAllowedPath = /^\/(movie\/popular|discover\/movie|movie\/\d+|movie\/\d+\/images)$/.test(tmdbPath);
 
     if (!isAllowedPath) {
       return new Response("Not found", { status: 404, headers });
