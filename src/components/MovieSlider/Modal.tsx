@@ -2,7 +2,6 @@ import { useDispatch } from "react-redux";
 import { closeModal } from "../../store/openModal";
 import Button from "../UI/Button";
 import InfiniteSlider from "../MovieSlider/InfiniteImageSlider";
-import useMovieImages from "../../Hooks/useMovieImages";
 
 type Modal = {
 
@@ -18,7 +17,6 @@ const Modal = ({isHidden = 'hidden', title, description, image, movie_ID }: Moda
     
     const dispatch = useDispatch();
 
-    const posters = useMovieImages(movie_ID)
 
     const closeModalHandler = () => {
             
@@ -30,18 +28,19 @@ const Modal = ({isHidden = 'hidden', title, description, image, movie_ID }: Moda
   
     <div 
         id="modalWrapper" 
-        className={`w-full h-full fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm ${isHidden}`}
-        onClick={(event) => {
-          if (event.target === event.currentTarget) {
-            closeModalHandler();
-          }
-    }}>
+        className={`w-full h-full fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 ${isHidden}`}
+    //     onClick={(event) => {
+    //       if (event.target === event.currentTarget) {
+    //         closeModalHandler();
+    //       }
+    // }}
+    >
     
 
     <div className="
-    w-full h-170 max-w-md rounded-2xl bg-white p-2 shadow-xl transition-all dark:bg-slate-900 absolute left-20 flex justify-center items-center">
+    max-w-150 max-h-170 rounded-2xl bg-white p-2 shadow-xl transition-all dark:bg-slate-900 absolute left-20 flex justify-center items-center">
 
-        <InfiniteSlider posters={posters} />
+        <InfiniteSlider movie_ID={movie_ID} />
         
     </div>
 

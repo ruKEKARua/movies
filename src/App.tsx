@@ -77,7 +77,7 @@ function App() {
         <section id="center" className='relative z-1 flex flex-col justify-center items-center w-screen h-screen'>
             
             
-            <section >
+            <section>
                 
                 {
                     <MovieSlider movies={moviesArray}/>

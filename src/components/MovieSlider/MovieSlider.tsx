@@ -69,7 +69,7 @@ export function MovieSlider({ movies }: MovieSliderProps ) {
             <SearchBar/> <br></br>
 
 
-            <div className="relative flex items-center justify-center w-300 h-120 rounded-3xl shadow-[inset-20] select-auto">
+            <div className="relative flex items-center justify-center w-300 h-120 rounded-3xl shadow-[inset-20] select-auto   page-enter" key={page}>
 
 
                 <Swiper
@@ -102,15 +102,20 @@ export function MovieSlider({ movies }: MovieSliderProps ) {
                             
                                 <SwiperSlide key={key} className="p-5">
                                 
-                                    <div className="w-60 h-110 m-auto gap-5 flex flex-col justify-center items-center" key={movie.id} >
+                                    <div className="w-60 h-120 m-auto gap-5 flex flex-col justify-center items-center" key={movie.id} >
                                         <p className="text-white">
                                             {russian_title ? russian_title : original_title}
                                         </p>
                                     
-                                        <img src={posterURL} className="min-w-50 min-h-80 m-auto rounded-2xl" style={{boxShadow: `
-                                                7px 16px 26px 25px rgba(0,0,0,0.7)
-                                                `}}/>
-                                    
+                                        <div className="min-w-50 min-h-80 m-auto rounded-2xl"
+                                        style={{boxShadow: `
+                                                    7px 16px 26px 25px rgba(0,0,0,0.7)
+                                                    `}}>
+                                            <img src={posterURL} className="min-w-50 min-h-80 m-auto rounded-2xl"/>
+                                            <div className="
+                                            text-[#ffeb3b] text-5xl absolute top-11 right-15
+                                            ">*</div>
+                                        </div>
                                         <Button
                                             onClick={() => openDescription(russian_title, overview, posterURL, movieID)}
                                             label="Поробнее"
@@ -118,9 +123,6 @@ export function MovieSlider({ movies }: MovieSliderProps ) {
                                             rounded-xl px-10 py-2 text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                         />
 
-                                        <div className="
-                                        text-[#ffeb3b] text-5xl absolute top-11 right-15
-                                        ">*</div>
 
                                     </div>
 
@@ -164,77 +166,6 @@ export function MovieSlider({ movies }: MovieSliderProps ) {
                             </svg>} />
                 </div>
 
-
-
-
-                {/* {(() => {
-                    const groups = [];
-
-                    // Идем по массиву с шагом 3 и режем его на куски
-                    for (let i = 0; i < movies.length; i += 3) {
-                      const chunk = movies.slice(i, i + 3);
-                    
-                      groups.push(
-                        <div className={`flex gap-4`} style={{
-                            transform: `translateX(${transition}px)`,
-                            transition: "transform 0.3s ease",
-                        }} key={i}>
-                          {chunk.map((element) => {
-                            const posterURL = `${posterURLPlaceholder}/${posterSize}/${element.poster_path}`;
-                            const russian_title = element.title;
-                            const original_title = element.original_title;
-                            const overview = element.overview;
-                        
-                            return (
-                              <div className="w-60 h-110 gap-5 flex flex-col" key={element.id}>
-                                <p className="text-white">
-                                  {russian_title ? russian_title : original_title}
-                                </p>
-                            
-                                <img src={posterURL} className="min-w-50 min-h-80 m-auto" />
-                            
-                                <Button
-                                  onClick={() => openDescription(russian_title, overview, posterURL)}
-                                  label="Поробнее"
-                                  className="rounded-xl px-10 py-2 text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    }
-
-                    return groups;
-                })()}  */}
-
-                
-                {/* <div className="w-10 h-10 absolute left-90 bg-green-100 text-white rounded-full flex items-center justify-center rotate-180" >
-                    <Button onClick={backMiniPageOfMovies} className="
-                    w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center z-1"
-                    children={
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8 5L15 12L8 19" 
-                                stroke="#61b28a" 
-                                strokeWidth="3" 
-                                stroke-linecap="round" 
-                                stroke-linejoin="round"
-                                />
-                        </svg>} />
-                </div>
-                <div className="w-10 h-10 absolute left-320 bg-green-100 text-white rounded-full flex items-center justify-center">
-                    <Button onClick={nextMiniPageOfMovies} className="
-                    w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center z-1"
-                    children={
-                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M8 5L15 12L8 19" 
-                                stroke="#61b28a" 
-                                stroke-width="3" 
-                                stroke-linecap="round" 
-                                stroke-linejoin="round"
-                                />
-                        </svg>} />
-                </div> */}
 
                 {/* если true, то класс hidden снимается, иначе происходит отображение модального окна */}
                 {isModalOpen && movie_ID !== null && (

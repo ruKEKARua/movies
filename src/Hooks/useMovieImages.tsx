@@ -16,32 +16,39 @@ type MovieImageData = {
     
 }
 
-const useMovieImages = (movie_id: number) => {
+type MovieImagesResponse = {
+  backdrops: MovieImageData[];
+  logos: MovieImageData[];
+  posters: MovieImageData[];
+};
 
 
-    const [data, setData] = useState<MovieImageData[]>([]);
-    
+type MovieImagesProps = {
+
+    movie_id: number; 
+    postersType: string;
+
+}
+
+const useMovieImages = ({ movie_id, postersType }: MovieImagesProps) => {
+  const [data, setData] = useState<MovieImageData[]>([]);
 
     useEffect(() => {
 
-        fetchTmdb<{ backdrops: MovieImageData[]; posters: MovieImageData[] }>(`/movie/${movie_id}/images?include_image_language=ru`)
-            .then(res => {
-                //const data1 = res.logos;
-                const data2 = res.backdrops;
-                const data3 = res.posters;
-                const result = [...data2, ...data3]
-                setData(result)
+      fetchTmdb<MovieImagesResponse>(`/movie/${movie_id}/images`)
+
+            .then((res) => {
+
+                setData(res[postersType]);
+
             })
-            .catch(err => console.error(err));
+            
+            .catch((err) => console.error(err));
 
-        
-        
+    }, [movie_id, postersType]);
 
-    }, [movie_id])
+    return data;
 
-    return (
-        data
-    )
-}
+};
 
 export default useMovieImages
