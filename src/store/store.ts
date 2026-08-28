@@ -2,7 +2,7 @@ import { configureStore } from '@reduxjs/toolkit'
 import changeModalVisibleReducer from './openModal'
 import sliderMoveReducer from './sliderMove'
 import NumberOfPageInSliderReducer from './pageNumber'
-
+import searchBarReducer from './searchBar'
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +10,7 @@ export const store = configureStore({
     openModal: changeModalVisibleReducer,
     sliderMove: sliderMoveReducer,
     numberOfPageInSlider: NumberOfPageInSliderReducer,
+    searchBarValue: searchBarReducer,
 
   },
 })

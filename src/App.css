@@ -24,21 +24,21 @@ body {
 
 @keyframes slideMoveLeft {
   from {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(-33.5%, 0, 0);
   }
 
   to {
-    transform: translate3d(-116.5%, 0, 0);
+    transform: translate3d(-150%, 0, 0);
   }
 }
 
 @keyframes slideMoveRight {
   from {
-    transform: translate3d(-116.5%, 0, 0);
+    transform: translate3d(-150.0%, 0, 0);
   }
 
   to {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(-33.5%, 0, 0);
   }
 }
 

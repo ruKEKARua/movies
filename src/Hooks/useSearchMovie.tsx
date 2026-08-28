@@ -1,7 +1,6 @@
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { changeSliderPosition } from "../store/sliderMove";
-import { fetchTmdb } from "../api/tmdb";
+import { useEffect, useState } from 'react'
+import { fetchTmdb } from '../api/tmdb';
+
 
 
 type Movie = {
@@ -29,32 +28,37 @@ type Person = {
 
 };
 
+type Media = Movie | Person;
+
 
 type KnownForMovie = {
   id: number;
 };
 
-const useMoviesData = (page:number=1) => {
-    const dispatch = useDispatch();
+type MovieSliderProps = {
+  media: Media[];
+};
 
-    const [data, setData] = useState<Movie[]|Person[]>([]);
+const useSearchMovie = (searchValue: string) => {
+
+    const [data, setData] = useState<MovieSliderProps>();
+
 
     useEffect(() => {
 
-        fetchTmdb<{ results: Movie[]|Person[] }>(`/discover/movie?include_adult=false&include_video=false&language=ru-ru&page=${page}&sort_by=vote_count.desc`)
+        fetchTmdb<MovieSliderProps>(`/search/multi?query=${searchValue}&include_adult=false&language=ru-ru&page=1`)
             .then(res => {
-                setData(res.results)
+                setData(res)
+                console.log(res)
             })
             .catch(err => console.error(err));
+    
 
-        dispatch(changeSliderPosition(0));
-        
-
-    }, [page, dispatch])
+    }, [searchValue])
 
     return (
         data
     )
 }
 
-export default useMoviesData
+export default useSearchMovie
