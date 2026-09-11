@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
-import usePopularMovies from '../../Hooks/usePopularMovies';
-import type { RootState } from '../../store/store';
+import usePopularMovies from '../HooksTMDB/usePopularMovies';
+import type { RootState } from '../store/store';
 
 const BackgroundPosters = ({page, direction}:{page:number, direction?:boolean}) => {
 
@@ -17,12 +17,12 @@ const BackgroundPosters = ({page, direction}:{page:number, direction?:boolean}) 
 
     const newPostersURL = [...postersURL, ...postersURL]
 
-    const isEnable = !isModalOpen;
 
   return (
     <div className={`size-full flex items-center will-change-transform gap-5 mt-2 mb-2`}
     style={{
-        animation: `${direction ? 'slideMoveRight' : 'slideMoveLeft'} ${isEnable ? '200s' : '0s'} linear infinite`
+        animation: `${direction ? 'slideMoveRight' : 'slideMoveLeft'} 200s linear infinite`,
+        animationPlayState: isModalOpen ? 'paused' : 'running',
     }}>
             
 

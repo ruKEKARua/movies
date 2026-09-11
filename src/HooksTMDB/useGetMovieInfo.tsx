@@ -5,7 +5,7 @@ type MovieData = {
     adult: boolean;
     backdrop_path:string;
     budget: number;
-    genres: string[];
+    genres: Genres[];
     homepage: string;
     id: number;
     imdb_id: string;
@@ -15,17 +15,40 @@ type MovieData = {
     overview:string;
     popularity: number;
     poster_path: string;
-    production_companies: string[];
-    production_countries: string[];
+    production_companies: ProductionCompanies[];
+    production_countries: ProductionCountries[];
     release_date: string;
     revenue: number;
     runtime: number;
-    spoken_languages: string[];
+    spoken_languages: Spokenlanguages[];
     status: string;
     tagline: string;
     title: string;
     vote_average: number;
     vote_count: number;
+}
+
+type Genres = {
+    id: number;
+    name: string;
+}
+
+type ProductionCompanies = {
+    id: number;
+    logo_path: string;
+    name: string;
+    origin_country: string;
+}
+
+type ProductionCountries = {
+    iso_3166_1: string;
+    name: string;
+}
+
+type Spokenlanguages = {
+    english_name: string;
+    iso_639_1: string;
+    name: string;
 }
 
 

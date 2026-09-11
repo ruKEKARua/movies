@@ -3,6 +3,8 @@ import changeModalVisibleReducer from './openModal'
 import sliderMoveReducer from './sliderMove'
 import NumberOfPageInSliderReducer from './pageNumber'
 import searchBarReducer from './searchBar'
+import excelMoviesReducer from './excelMovies'
+import setFoundMoviesReducer from './foundMovies'
 
 export const store = configureStore({
   reducer: {
@@ -11,7 +13,8 @@ export const store = configureStore({
     sliderMove: sliderMoveReducer,
     numberOfPageInSlider: NumberOfPageInSliderReducer,
     searchBarValue: searchBarReducer,
-
+    setExcelMovies: excelMoviesReducer,
+    foundMovies: setFoundMoviesReducer,
   },
 })
 

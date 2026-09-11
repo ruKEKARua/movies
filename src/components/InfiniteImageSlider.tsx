@@ -4,7 +4,7 @@ import { FreeMode, Mousewheel, Navigation } from "swiper/modules";
 import type { RootState } from "../../store/store";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import useMovieImages from "../../Hooks/useMovieImages";
+import useMovieImages from "../../HooksTMDB/useMovieImages";
 import "swiper/css";
 import "swiper/css/navigation";
 

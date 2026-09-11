@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useDispatch } from 'react-redux';
-import { setPage } from '../../store/pageNumber';
-import Button from '../UI/Button';
+import { setPage } from '../store/pageNumber';
+import Button from './UI/Button';
 
 const SearchBar = () => {
 

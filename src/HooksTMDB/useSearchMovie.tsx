@@ -49,7 +49,6 @@ const useSearchMovie = (searchValue: string) => {
         fetchTmdb<MovieSliderProps>(`/search/multi?query=${searchValue}&include_adult=false&language=ru-ru&page=1`)
             .then(res => {
                 setData(res)
-                console.log(res)
             })
             .catch(err => console.error(err));
     

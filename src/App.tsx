@@ -1,19 +1,20 @@
-
 import './App.css'
 
 
 import type { RootState } from "./store/store";
 
 import Button from './components/UI/Button'
-import useMoviesData from './Hooks/useMoviesData';
-import { MovieSlider } from './components/MovieSlider/MovieSlider'
+import useMoviesData from './HooksTMDB/useMoviesData';
+import { MovieSlider } from './components/MovieSlider'
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
 import { setPage } from './store/pageNumber';
-import BackgroundPosters from './components/Background/BackgroundPosters';
-// import useGetMovieInfo from './Hooks/useGetMovieInfo';
+import BackgroundPosters from './components/BackgroundPosters';
+
+import useGetMovies from './HooksExcelMovies/useGetMovies';
+import useSearchMovie from './HooksTMDB/useSearchMovie';
 import { setSearchBarValue } from './store/searchBar';
-import useSearchMovie from './Hooks/useSearchMovie';
+import useSetArrayOfSearchedMovies from './HooksTMDB/useSetArrayOfSearchedMovies';
 
 
 function App() {
@@ -22,10 +23,14 @@ function App() {
 
     const page = useSelector((state: RootState) => state.numberOfPageInSlider.value);
     const searchBarValue = useSelector((state: RootState) => state.searchBarValue.value);
-    
+    const moviesFromExcel = useSelector((state: RootState) => state.setExcelMovies.value)
+    const foundMovies = useSelector((state: RootState) => state.foundMovies.value);
     
     const moviesArray = useMoviesData(page);
-    // const movieData = useGetMovieInfo(19995);
+    const searchValueArray = useSearchMovie(searchBarValue);
+
+    const { login } = useGetMovies();
+    useSetArrayOfSearchedMovies(moviesFromExcel);
 
     const nextPage = () => {
 
@@ -48,23 +53,23 @@ function App() {
     }
     
     const [sliderPages] = useState(() => ({
-      first: randomNumber(1, 3),
-      second: randomNumber(4, 7),
-      third: randomNumber(8, 11),
-      fourth: randomNumber(12, 15),
+        first: randomNumber(1, 3),
+        second: randomNumber(4, 7),
+        third: randomNumber(8, 11),
+        fourth: randomNumber(12, 15),
     }));
 
-    const searchValueArray = useSearchMovie(searchBarValue);
+    
 
     useEffect(() => {
-        
 
-        //console.log('moviesArray = ', moviesArray)
-        // console.log(movieData)
-        // console.log(searchBarValue)
+        console.log('moviesArray = ', moviesArray)
+        console.log('seartchBar = ', searchValueArray)
+        console.log('Кино с экселя = ', moviesFromExcel)
+        console.log('Тест = ', foundMovies)
+
     })
 
-    
 
     
     return (
@@ -93,12 +98,14 @@ function App() {
                 }} className="
                     flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200
                     hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 active:scale-95" />
-                    
+
+                <Button className='' onClick={login} label='Авторизоваться с помощью Google' />
+
             </div>
-            <section>
+            <section className='w-full h-full max-h-160 flex items-center justify-center'>
                 
                 {
-                    searchBarValue == '' ? <MovieSlider media={moviesArray}/>
+                    searchBarValue == '' ? <MovieSlider media={foundMovies}/>
                     : <MovieSlider media={searchValueArray?.results ?? []} />
                 }
             
