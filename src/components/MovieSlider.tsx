@@ -148,7 +148,7 @@ export function MovieSlider({ media }: MovieSliderProps ) {
 
                                 const russianName = personVariables.name;
                                 const originalName = personVariables.original_name;
-                                const knownFor = personVariables.known_for_department;
+                                //const knownFor = personVariables.known_for_department;
                                 const image = personVariables.profile_path;
                                 const movieId = personVariables.known_for[0]?.id;
 
