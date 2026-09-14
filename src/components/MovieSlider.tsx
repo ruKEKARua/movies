@@ -212,11 +212,11 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                             `}
                     />
 
-                    <div className="slider-controls pointer-events-auto absolute z-20 flex justify-between">
+                    <div className="slider-controls pointer-events-none absolute z-20 flex justify-between">
                         <Button
                             onClick={() => swiperRef.current?.slidePrev()}
                             className="
-                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center rotate-180 prevButton"
+                            pointer-events-auto w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center rotate-180 prevButton"
                             children={
                                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 5L15 12L8 19" 
@@ -230,7 +230,7 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                         <Button
                             onClick={() => swiperRef.current?.slideNext()}
                             className="
-                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center nextButton"
+                            pointer-events-auto w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center nextButton"
                             children={
                                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 5L15 12L8 19" 

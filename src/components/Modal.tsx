@@ -126,7 +126,7 @@ const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: Modal
   
     <div 
         id="modalWrapper" 
-        className={`w-full h-full fixed select-text inset-0 z-50 flex items-center justify-evenly bg-black/50 ${isHidden}`}
+        className={`w-full h-full fixed select-text inset-0 z-50 flex items-center justify-center gap-16 bg-black/50 ${isHidden}`}
         onClick={(event) => {
           if (event.target === event.currentTarget) {
             closeModalHandler();

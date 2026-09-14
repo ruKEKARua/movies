@@ -157,9 +157,9 @@ body {
 }
 
 .slider-controls {
-  inset-inline: 0.5rem;
+  inset-inline: -1.5rem;
   top: 50%;
-  width: calc(100% - 1rem);
+  width: calc(100% + 3rem);
   transform: translateY(-50%);
 }
 
