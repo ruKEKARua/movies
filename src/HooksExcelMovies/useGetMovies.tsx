@@ -128,7 +128,6 @@ const useGetMovies = () => {
 
                 setData(movies.filter((item) => item !== '' && item !== '2025' && item !== '2026'));
                 setUsersRating(ratings);
-                console.log('Данные диапазона Киноклуб!C5:F:', ratings);
             } catch (error) {
                 console.error('Ошибка загрузки данных Google Sheets:', error);
             }

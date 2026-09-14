@@ -29,9 +29,7 @@ const MovieCard = ({id=0, title = '', posterPath = '', func}: MovieCardProps) =>
             }}
         >
         <img src={posterPath} alt={title} className="movie-poster-image m-auto rounded-2xl"/>
-        <div className="
-            text-[#ffeb3b] text-5xl absolute top-11 right-15
-            ">*</div>
+
         </div>
 
 
