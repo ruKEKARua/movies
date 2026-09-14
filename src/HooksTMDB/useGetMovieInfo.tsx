@@ -55,21 +55,25 @@ type Spokenlanguages = {
 const useGetMovieInfo = (movieId: number) => {
 
     const [data, setData] = useState<MovieData | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        setData(null);
+        setError(null);
 
         fetchTmdb<MovieData>(`/movie/${movieId}?language=ru-ru`)
             .then(res => {
                 setData(res)
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                setError(err instanceof Error ? err : new Error('Не удалось загрузить информацию о фильме'));
+            });
     
 
     }, [movieId])
 
-    return (
-        data
-    )
+    return { data, error };
 }
 
 export default useGetMovieInfo

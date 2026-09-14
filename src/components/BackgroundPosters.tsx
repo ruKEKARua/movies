@@ -1,32 +1,26 @@
-import { useSelector } from 'react-redux';
 import usePopularMovies from '../HooksTMDB/usePopularMovies';
-import type { RootState } from '../store/store';
 
 const BackgroundPosters = ({page, direction}:{page:number, direction?:boolean}) => {
 
     const popularMoviesArray = usePopularMovies(page);
-    const isModalOpen = useSelector((state: RootState) => state.openModal.value)
-
-
-    const posterSize:string = 'w200';
+    const posterSize:string = 'w92';
     const posterURLPlaceholder:string = `https://image.tmdb.org/t/p`;
 
     const postersURL = popularMoviesArray.map((image) => {
         return `${posterURLPlaceholder}/${posterSize}${image.poster_path}`;
     })
 
-    const newPostersURL = [...postersURL, ...postersURL]
+    //const newPostersURL = [...postersURL, ...postersURL]
 
 
   return (
-    <div className={`size-full flex items-center will-change-transform gap-5 mt-2 mb-2`}
+    <div className="size-full flex items-center gap-5 mt-2 mb-2"
     style={{
-        animation: `${direction ? 'slideMoveRight' : 'slideMoveLeft'} 200s linear infinite`,
-        animationPlayState: isModalOpen ? 'paused' : 'running',
+        transform: `translateX(${direction ? 150 : -150}px)`,
     }}>
             
 
-        {newPostersURL.map((poster, index) => (
+        {postersURL.map((poster, index) => (
             <img
                 key={index}
                 src={poster}

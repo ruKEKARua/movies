@@ -4,11 +4,9 @@ import './App.css'
 import type { RootState } from "./store/store";
 
 import Button from './components/UI/Button'
-import useMoviesData from './HooksTMDB/useMoviesData';
 import { MovieSlider } from './components/MovieSlider'
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { setPage } from './store/pageNumber';
 import BackgroundPosters from './components/BackgroundPosters';
 
 import useGetMovies from './HooksExcelMovies/useGetMovies';
@@ -21,29 +19,27 @@ function App() {
 
     const dispatch = useDispatch();
 
-    const page = useSelector((state: RootState) => state.numberOfPageInSlider.value);
     const searchBarValue = useSelector((state: RootState) => state.searchBarValue.value);
     const moviesFromExcel = useSelector((state: RootState) => state.setExcelMovies.value)
     const foundMovies = useSelector((state: RootState) => state.foundMovies.value);
     
-    const moviesArray = useMoviesData(page);
     const searchValueArray = useSearchMovie(searchBarValue);
 
-    const { login } = useGetMovies();
+    const normalizedSearchValue = searchBarValue.trim().toLowerCase();
+    const filteredSliderMovies = normalizedSearchValue
+        ? foundMovies.filter((movie) => {
+            if (movie.media_type === 'person') {
+                return false;
+            }
+
+            return [movie.title, movie.original_title].some((title) =>
+                title?.toLowerCase().includes(normalizedSearchValue)
+            );
+        })
+        : foundMovies;
+
+    const { login, isAuthorized, userName, userPicture, usersRating } = useGetMovies();
     useSetArrayOfSearchedMovies(moviesFromExcel);
-
-    const nextPage = () => {
-
-        /* если открыта последняя страница, то она устанавливается на самую первую */
-        const currentPage = page === 500 ? 1 : page + 1;
-        dispatch(setPage(currentPage))
-    }
-
-    const previousPage = () => {
-        /* если открыта первая страница, то она устанавливается на самую посленюю */
-        const currentPage = page === 1 ? 500 : page - 1;
-        dispatch(setPage(currentPage))
-    }
 
     const randomNumber = (min:number, max:number) => {
 
@@ -63,19 +59,42 @@ function App() {
 
     useEffect(() => {
 
-        console.log('moviesArray = ', moviesArray)
-        console.log('seartchBar = ', searchValueArray)
-        console.log('Кино с экселя = ', moviesFromExcel)
-        console.log('Тест = ', foundMovies)
+        //console.log('moviesArray = ', moviesArray)
+        //console.log('seartchBar = ', searchValueArray)
+        //console.log('Кино с экселя = ', moviesFromExcel)
+        //console.log('Тест = ', foundMovies)
+        //console.log('Оценили: ', usersRating);
 
-    })
+    }, [foundMovies])
 
 
-    
     return (
         <>
-        
-        <div className=" w-screen h-screen overflow-hidden flex items-center justify-center absolute select-none">
+            <div className='auth-panel bg-sky-700 z-10 rounded-br-full absolute'>
+                {!isAuthorized ? (
+                    <Button className='text-amber-50' onClick={login} label='Авторизоваться с помощью Google' />
+                ) : (
+                    <div className='flex items-center gap-2 text-amber-50 px-4 py-2'>
+                        {userPicture && (
+                            <img
+                                src={userPicture}
+                                alt='Аватар пользователя'
+                                referrerPolicy='no-referrer'
+                                className='w-8 h-8 rounded-full object-cover'
+                            />
+                        )}
+                        <p className='auth-label'>
+                            {userName ? (
+                                <>
+                                    Вы вошли как: <span className='text-amber-400'>{userName}</span>
+                                </>
+                            ) : 'Вы вошли в аккаунт Google'}
+                        </p>
+                    </div>
+                )}
+            </div>
+
+        <div className="background-layer w-screen h-screen overflow-hidden flex items-center justify-center absolute select-none">
             <section className="
                 absolute left-1/2 top-1/2 
                 flex w-[160%] h-size
@@ -90,28 +109,32 @@ function App() {
             </section>
         </div>
 
-        <section id="center" className='relative z-1 flex flex-col justify-center items-center w-screen h-screen'>
+        <section id="center" className='app-content relative z-1 flex flex-col justify-center items-center w-screen h-screen'>
 
-            <div>
-                <input type="search" name="search" id="search" onChange={(event) => {
-                    dispatch(setSearchBarValue(event.target.value))
-                }} className="
-                    flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200
-                    hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 active:scale-95" />
+            <header className='app-header'>
+                <div className='search-section text-center justify-center items-center'>
+                    <h2>Поиск по названию или имени</h2>
+                    <div className='w-full'>
+                        <input type="search" name="search" id="search" aria-label="Поиск по названию или имени" onChange={(event) => {
+                            dispatch(setSearchBarValue(event.target.value))
+                        }} className="search-input m-auto
+                            flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200
+                            hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 active:scale-95" />
+                    </div>
+                </div>
+            </header>
 
-                <Button className='' onClick={login} label='Авторизоваться с помощью Google' />
-
-            </div>
-            <section className='w-full h-full max-h-160 flex items-center justify-center'>
+            <section className='slider-section w-full flex items-center justify-center'>
                 
                 {
-                    searchBarValue == '' ? <MovieSlider media={foundMovies}/>
-                    : <MovieSlider media={searchValueArray?.results ?? []} />
+                    searchBarValue.trim() === '' ? <MovieSlider media={foundMovies} ratings={usersRating}/>
+                    : filteredSliderMovies.length > 0 ? <MovieSlider media={filteredSliderMovies} ratings={usersRating}/>
+                    : <MovieSlider media={searchValueArray?.results ?? []} ratings={usersRating} />
                 }
             
             </section>
                 
-            <section>
+            {/* <section>
                 
                 <Button onClick={() => previousPage()} label='предыдущая страница' className='
                 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'/>
@@ -119,7 +142,7 @@ function App() {
                 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2'/> 
                 
                 
-            </section>
+            </section> */}
               
          
         </section>

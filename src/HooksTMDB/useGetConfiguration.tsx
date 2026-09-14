@@ -23,21 +23,24 @@ type ImagesConfig = {
 const useGetConfiguration = () => {
 
     const [data, setData] = useState<ConfigAPI | null>(null);
+    const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        setError(null);
 
         fetchTmdb<ConfigAPI>(`/configuration`)
             .then(res => {
                 setData(res)
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                setError(err instanceof Error ? err : new Error('Не удалось загрузить конфигурацию'));
+            });
     
 
     }, [])
 
-    return (
-        data
-    )
+    return { data, error };
 }
 
 export default useGetConfiguration

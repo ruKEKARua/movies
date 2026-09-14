@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Button from "./UI/Button";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -10,8 +10,8 @@ import type { RootState } from "../store/store";
 import 'swiper/css';
 import { Swiper, SwiperSlide } from "swiper/react";
 import { FreeMode, Navigation } from "swiper/modules";
-import SearchBar from "./SearchBar";
 import MovieCard from "./MovieCard";
+import type { MovieRatings } from "../HooksExcelMovies/useGetMovies";
 
 
 type Movie = {
@@ -23,6 +23,7 @@ type Movie = {
     title: string; // название на русском
     overview: string; // описание
     poster_path: string; // постер на русском
+    excelTitle?: string;
 
 };
 
@@ -48,10 +49,11 @@ type KnownForMovie = {
 
 type MovieSliderProps = {
   media: Media[];
+    ratings: MovieRatings[];
 };
 
 
-export function MovieSlider({ media }: MovieSliderProps ) {
+export function MovieSlider({ media, ratings }: MovieSliderProps ) {
     
     const dispatch = useDispatch();
     
@@ -59,14 +61,17 @@ export function MovieSlider({ media }: MovieSliderProps ) {
     const page = useSelector((state: RootState) => state.numberOfPageInSlider.value)
     
 
-    const [movie_ID, setMovie_ID] = useState<number | null>(null);        
+    const [movie_ID, setMovie_ID] = useState<number | null>(null);
+    const [excelMovieTitle, setExcelMovieTitle] = useState<string | undefined>();
+    const swiperRef = useRef<{ slidePrev: () => void; slideNext: () => void } | null>(null);
 
     const posterSize = 'w780';
     const posterURLPlaceholder = `https://image.tmdb.org/t/p`;
 
-    const openDescription = (movieID:number) => {
+    const openDescription = (movieID:number, sourceTitle?: string) => {
         
         setMovie_ID(movieID)
+        setExcelMovieTitle(sourceTitle)
         
         
         dispatch(openModal())
@@ -75,26 +80,33 @@ export function MovieSlider({ media }: MovieSliderProps ) {
 
 
     return (
-        media.length > 0 ? <div>
+        media.length > 0 ? <div className="movie-slider">
 
-            <h1 className="">Номер страницы: {page}</h1>
+            {/* <div>
+                <h1 className="">Номер страницы: {page}</h1>
 
-            <SearchBar/> <br></br>
-
-                <div className="relative flex items-center justify-center w-300 h-120 rounded-3xl shadow-[inset-20] select-auto page-enter" key={page}>
+                <SearchBar/> <br></br>
+            </div>         */}
+                <div className="movie-slider-frame relative flex items-center justify-center rounded-3xl shadow-[inset-20] select-auto page-enter" key={page}>
 
 
                     <Swiper
 
                         modules={[Navigation, FreeMode]}
-                        slidesPerView={media.length > 3 ? 3.25 : media.length}
+                        slidesPerView={1}
                         slidesPerGroup={1}
+                        breakpoints={{
+                            560: { slidesPerView: 2 },
+                            900: { slidesPerView: media.length > 3 ? 3.25 : media.length },
+                        }}
                         
                         pagination={true}
 
                         freeMode={{momentum:false, enabled:false}}
-                        navigation={{enabled:true, nextEl:'.nextButton', prevEl:'.prevButton'}}
                         loop={true}
+                        onSwiper={(swiper) => {
+                            swiperRef.current = swiper;
+                        }}
                     
 
                         className="rounded-3xl bg-gray-600/10"
@@ -123,9 +135,14 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                                     return (
 
                                         
-                                        <SwiperSlide key={key} className="p-5">
+                                        <SwiperSlide key={key} className="movie-slide p-5">
                                         
-                                            <MovieCard id={id} title={title} posterPath={posterPath} func={openDescription} />
+                                            <MovieCard
+                                                id={id}
+                                                title={title}
+                                                posterPath={posterPath}
+                                                func={(movieID) => openDescription(movieID, media.excelTitle)}
+                                            />
 
                                         </SwiperSlide>
 
@@ -155,33 +172,30 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                                 const placeholderImage = `https://placehold.co/780x1170?text=${russianName}`;
 
                                 return(
-                                    <SwiperSlide key={key} className="p-5">
+                                    <SwiperSlide key={key} className="movie-slide p-5">
 
-                                        <div className="w-60 h-120 m-auto gap-5 flex flex-col justify-center items-center" key={media.id} >
+                                        <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={media.id} >
 
-                                            <p className="text-white">
+                                            <p className="movie-title text-white">
                                                 {russianName ? russianName : originalName}
                                             </p>
 
-                                            <div className="min-w-50 min-h-80 m-auto rounded-2xl"
-                                            style={{boxShadow: `
-                                                7px 16px 26px 25px rgba(0,0,0,0.7)
-                                                `}}>
-                                                <img src={personVariables.profile_path == 'https://image.tmdb.org/t/p/w780/null' ? placeholderImage : image} className="min-w-50 min-h-80 m-auto rounded-2xl"/>
+                                            <div
+                                            className={`movie-poster poster-clickable m-auto rounded-2xl ${movieId === undefined ? 'poster-disabled' : ''}`}
+                                            role={movieId !== undefined ? 'button' : undefined}
+                                            tabIndex={movieId !== undefined ? 0 : undefined}
+                                            aria-label={movieId !== undefined ? `Открыть описание: ${russianName || originalName}` : undefined}
+                                            onClick={() => movieId !== undefined && openDescription(movieId)}
+                                            onKeyDown={(event) => {
+                                                if (movieId !== undefined && (event.key === 'Enter' || event.key === ' ')) {
+                                                    event.preventDefault();
+                                                    openDescription(movieId);
+                                                }
+                                            }}
+                                            >
+                                                <img src={personVariables.profile_path == 'https://image.tmdb.org/t/p/w780/null' ? placeholderImage : image} alt={russianName || originalName} className="movie-poster-image m-auto rounded-2xl"/>
                                             
                                             </div>
-                                            {movieId !== undefined && (
-                                            <Button
-                                                onClick={() =>
-                                                openDescription(
-                                                    movieId
-                                                )
-                                                }
-                                                label="Подробнее"
-                                                className="rounded-xl px-10 py-2 text-xl font-medium bg-blue-600"
-                                            />
-                                            )}
-
 
                                         </div>
 
@@ -193,17 +207,16 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                     </Swiper>
 
                     <div
-                        className={`pointer-events-none absolute inset-0 z-10 rounded-3xl h-140 -top-5
+                        className={`slider-edge-shadow pointer-events-none absolute inset-0 z-10 rounded-3xl
                             ${media.length < 4 ? 'opacity-0' : ''}
                             `}
-                        style={{boxShadow: `
-                            inset 00px 0px 16px -8px rgba(0,0,0,0.6), inset -100px 0px 16px -16px rgba(0,0,0,0.6)
-                            `}}
                     />
 
-                    <div className="pointer-events-auto absolute z-0 w-340 h-10 flex justify-between">
-                        <Button className="
-                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center z-1 rotate-180 prevButton"
+                    <div className="slider-controls pointer-events-auto absolute z-20 flex justify-between">
+                        <Button
+                            onClick={() => swiperRef.current?.slidePrev()}
+                            className="
+                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center rotate-180 prevButton"
                             children={
                                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 5L15 12L8 19" 
@@ -214,8 +227,10 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                                         />
                                 </svg>} />
 
-                        <Button className="
-                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center z-1 nextButton"
+                        <Button
+                            onClick={() => swiperRef.current?.slideNext()}
+                            className="
+                            w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center nextButton"
                             children={
                                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 5L15 12L8 19" 
@@ -233,12 +248,14 @@ export function MovieSlider({ media }: MovieSliderProps ) {
                     <Modal
                         isHidden=""
                         movie_ID={movie_ID}
+                        ratings={ratings}
+                        excelMovieTitle={excelMovieTitle}
                     />
                     )}
                 </div>
             </div>  
 
-        :   <div className="w-300 h-120 flex items-center justify-center">
+        :   <div className="empty-slider flex items-center justify-center">
                 <h1>Ничего не найдено</h1>
             </div>
     );

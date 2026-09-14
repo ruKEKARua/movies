@@ -1,5 +1,3 @@
-import Button from "./UI/Button"
-
 type MovieCardProps = {
 
     id: number;
@@ -11,27 +9,30 @@ type MovieCardProps = {
 
 const MovieCard = ({id=0, title = '', posterPath = '', func}: MovieCardProps) => {
   return (
-    <div className="w-60 h-120 m-auto gap-5 flex flex-col justify-center items-center" key={id} >
+    <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={id} >
 
-        <p className="text-white">
+        <p className="movie-title text-white">
             {title}
         </p>
 
-        <div className="min-w-50 min-h-80 m-auto rounded-2xl"
-        style={{boxShadow: `
-            7px 16px 26px 25px rgba(0,0,0,0.7)
-            `}}>
-        <img src={posterPath} className="min-w-50 min-h-80 m-auto rounded-2xl"/>
+        <div
+            className="movie-poster poster-clickable m-auto rounded-2xl"
+            role="button"
+            tabIndex={0}
+            aria-label={`Открыть описание: ${title}`}
+            onClick={() => func(id)}
+            onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    func(id);
+                }
+            }}
+        >
+        <img src={posterPath} alt={title} className="movie-poster-image m-auto rounded-2xl"/>
         <div className="
             text-[#ffeb3b] text-5xl absolute top-11 right-15
             ">*</div>
         </div>
-        <Button
-            onClick={() => func(id)}
-            label="Поробнее"
-            className="
-            rounded-xl px-10 py-2 text-xl font-medium bg-blue-600 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-        />
 
 
     </div>

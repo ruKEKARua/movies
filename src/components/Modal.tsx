@@ -1,31 +1,61 @@
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { closeModal } from "../store/openModal";
 import Button from "./UI/Button";
 import useGetMovieInfo from "../HooksTMDB/useGetMovieInfo";
 import useGetConfiguration from "../HooksTMDB/useGetConfiguration";
+import type { MovieRatings } from "../HooksExcelMovies/useGetMovies";
 
 type ModalProps = {
 
     isHidden?: string;
     movie_ID: number;
+    ratings: MovieRatings[];
+    excelMovieTitle?: string;
 
 }
 
-const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
+const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: ModalProps) => {
     
     const dispatch = useDispatch();
     
-    const movieInfo = useGetMovieInfo(movie_ID);
-    const configTMDB = useGetConfiguration();
+    const { data: movieInfo, error: movieError } = useGetMovieInfo(movie_ID);
+    const { data: configTMDB, error: configError } = useGetConfiguration();
+    const [isOnline, setIsOnline] = useState(() => navigator.onLine);
+    const isLoading = !movieInfo || !configTMDB;
+
+    useEffect(() => {
+        if (!isLoading) {
+            return;
+        }
+
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, [isLoading]);
 
 
     const posterSize = 'original';
     const posterURLPlaceholder = configTMDB?.images.base_url;
+    const hasError = isLoading && (!isOnline || Boolean(movieError || configError));
 
     const title = movieInfo?.title
     const description = movieInfo?.overview
-    const image = `${posterURLPlaceholder}/${posterSize}/${movieInfo?.poster_path}`
+    const image = movieInfo && posterURLPlaceholder
+        ? `${posterURLPlaceholder}/${posterSize}/${movieInfo.poster_path}`
+        : null;
     const voteAverage = movieInfo?.vote_average;
+    const excelRatings = excelMovieTitle
+        ? ratings.find((movie) => movie.movie.trim().toLowerCase() === excelMovieTitle.trim().toLowerCase())?.ratings ?? []
+        : [];
+    const overallRating = excelRatings[0]?.scores[1];
 
     const closeModalHandler = () => {
             
@@ -56,7 +86,43 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
         return `${day} ${months[Number(month) - 1]} ${year}`;
     }
 
-  return (
+    if (isLoading) {
+        return (
+            <div
+                id="modalWrapper"
+                className={`w-full h-full fixed select-text inset-0 z-50 flex items-center justify-center bg-black/50 ${isHidden}`}
+                onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                        closeModalHandler();
+                    }
+                }}
+            >
+                <div
+                    className="modal-loading flex h-48 w-full max-w-md flex-col items-center justify-center gap-5 rounded-2xl bg-white p-6 text-lg font-semibold text-slate-900 shadow-xl dark:bg-slate-900 dark:text-white"
+                >
+                    <div role="status" aria-live="polite" className="flex items-center justify-center">
+                        {hasError
+                            ? (isOnline
+                                ? "Не удалось загрузить данные. Попробуйте перезагрузить страницу."
+                                : "Нет подключения к интернету. Проверьте соединение.")
+                            : <div className="flex justify-center items-center gap-5 flex-col"> Загрузка
+                                <div
+                                    aria-label="Загрузка"
+                                    className="h-5 w-5 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600"
+                                />
+                            </div>}
+                    </div>
+                    <Button
+                        label="Закрыть"
+                        onClick={closeModalHandler}
+                        className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    return (
   
     <div 
         id="modalWrapper" 
@@ -67,7 +133,7 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
           }
     }}>
 
-        <div className="w-full max-w-120 h-full max-h-170 flex flex-col items-center justify-evenly rounded-bl-2xl rounded-xl bg-white p-6 shadow-xl transition-all dark:bg-slate-900">
+        <div className="modal-info w-full max-w-120 h-full max-h-170 flex flex-col items-center justify-evenly rounded-bl-2xl rounded-xl bg-white p-6 shadow-xl transition-all dark:bg-slate-900">
 
             <div className="w-full h-full max-h-30 flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
                 
@@ -95,7 +161,7 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
             <div className="w-full h-max p-2 flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
                 
                 <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
-                    Оценка
+                    Оценка на IMDB
                 </h4>
                 
                 <div className="w-full flex flex-col justify-center text-slate-200 text-center">
@@ -121,9 +187,30 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
 
             </div>
 
+            {excelRatings.length > 0 && (
+                <div className="flex h-full w-full max-h-80 flex-col rounded-2xl bg-white p-3 text-slate-900 transition-all dark:bg-slate-800 dark:text-white">
+                    <h4 className="mb-2 shrink-0 text-center text-lg font-semibold">Оценки Киноклуба</h4>
+                    <div className="min-h-0 flex-1 overflow-y-auto">
+                        <div className="flex flex-col gap-3 text-sm">
+                            {excelRatings.map((rating, index) => (
+                                <p key={`${rating.userName}-${index}`} className="flex items-center justify-evenly">
+                                    <span className="w-2/5 text-left text-lg">{rating.userName}</span>
+                                    <span className="w-1/5 text-right">{rating.scores[0] ?? '—'}</span>
+                                </p>
+                            ))}
+                        </div>
+                    </div>
+                    {overallRating && (
+                        <p className="mt-1 flex h-8 items-center justify-center border-t border-slate-300 text-center font-semibold leading-5 dark:border-slate-600">
+                            Общий результат: {overallRating}
+                        </p>
+                    )}
+                </div>
+            )}
+
             <div className="w-full h-max flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
                 
-                <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
+                <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full p-1">
                     Год выпуска — {formatDate(String(movieInfo?.release_date))}
                 </h4>
 
@@ -134,7 +221,7 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
         <div className="size-max flex items-center justify-center rounded-bl-2xl rounded-tl-2xl shadow-xl transition-all">
 
 
-            <div className="w-130 max-w-150 h-max flex items-center justify-center flex-col rounded-bl-2xl rounded-tl-2xl dark:bg-slate-900">
+            <div className="modal-description w-130 max-w-150 h-max flex items-center justify-center flex-col rounded-bl-2xl rounded-tl-2xl dark:bg-slate-900">
                 
                 <div className="m-5">
 
@@ -158,8 +245,7 @@ const Modal = ({isHidden = 'hidden', movie_ID }: ModalProps) => {
 
             <div className="w-full max-w-md rounded-2xl bg-white p-3 shadow-xl transition-all dark:bg-slate-900">
 
-
-                <img src={image} alt="" className="w-full h-full max-w-110 max-h-200" />
+                <img src={image ?? ''} alt={title} className="w-full h-full max-w-110 max-h-200" />
 
 
             </div>

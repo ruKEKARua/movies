@@ -21,12 +21,12 @@ const SearchBar = () => {
     }
 
   return (
-    <div className="flex justify-center items-center">
+    <div className="page-search flex justify-center items-center">
         <input type="search" name="pageInput" id="" className="
-        flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200
+        flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 page-search-input
         hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 active:scale-95" 
         value={input} onChange={(event) => setInput(event.target.value)} />
-        <Button className="bg-amber-500 text-white h-10 w-20 rounded-4xl" label="Перейти" onClick={setPageFromInput} />
+        <Button className="bg-amber-500 text-white h-10 w-20 rounded-4xl page-search-button" label="Перейти" onClick={setPageFromInput} />
     </div>
   )
 }
