@@ -13,11 +13,16 @@ import useGetMovies from './HooksExcelMovies/useGetMovies';
 import useSearchMovie from './HooksTMDB/useSearchMovie';
 import { setSearchBarValue } from './store/searchBar';
 import useSetArrayOfSearchedMovies from './HooksTMDB/useSetArrayOfSearchedMovies';
+import MovieEntryPage from './pages/MovieEntryPage';
 
+
+type PageMode = 'main' | 'entry';
 
 function App() {
 
     const dispatch = useDispatch();
+    const [page, setPage] = useState<PageMode>('main');
+    const [isAddMovieRequested, setIsAddMovieRequested] = useState(false);
 
     const searchBarValue = useSelector((state: RootState) => state.searchBarValue.value);
     const moviesFromExcel = useSelector((state: RootState) => state.setExcelMovies.value)
@@ -38,7 +43,7 @@ function App() {
         })
         : foundMovies;
 
-    const { login, isAuthorized, userName, userPicture, usersRating } = useGetMovies();
+    const { login, isAuthorized, isLoading, userName, userPicture, usersRating, participantNames, saveMovie } = useGetMovies();
     useSetArrayOfSearchedMovies(moviesFromExcel);
 
     const randomNumber = (min:number, max:number) => {
@@ -60,13 +65,31 @@ function App() {
     useEffect(() => {
 
         //console.log('moviesArray = ', moviesArray)
-        //console.log('seartchBar = ', searchValueArray)
-        //console.log('Кино с экселя = ', moviesFromExcel)
-        //console.log('Тест = ', foundMovies)
-        //console.log('Оценили: ', usersRating);
+        console.log('searchBar = ', searchValueArray)
+        console.log('Кино с экселя = ', moviesFromExcel)
+        console.log('Тест = ', foundMovies)
+        console.log('Оценили: ', usersRating);
 
-    }, [foundMovies])
+    }, [foundMovies, moviesFromExcel, searchValueArray, usersRating])
 
+
+    if (page === 'entry' || (isAddMovieRequested && isAuthorized)) {
+        return (
+            <div className='app-entry-screen min-h-screen bg-slate-950 text-white'>
+                <div className='flex justify-end p-4'>
+                    <Button
+                        className='rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700'
+                        onClick={() => {
+                            setPage('main');
+                            setIsAddMovieRequested(false);
+                        }}
+                        label='Вернуться к каталогу'
+                    />
+                </div>
+                <MovieEntryPage participantNames={participantNames} onSave={saveMovie} />
+            </div>
+        );
+    }
 
     return (
         <>
@@ -92,6 +115,22 @@ function App() {
                         </p>
                     </div>
                 )}
+            </div>
+
+            <div className='top-actions absolute right-4 top-4 z-20 flex gap-2'>
+                <Button
+                    className='rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-emerald-400'
+                    onClick={() => {
+                        if (isAuthorized) {
+                            setPage('entry');
+                            return;
+                        }
+
+                        setIsAddMovieRequested(true);
+                        login();
+                    }}
+                    label={isAuthorized ? 'Добавить фильм' : 'Войти и добавить фильм'}
+                />
             </div>
 
         <div className="background-layer w-screen h-screen overflow-hidden flex items-center justify-center absolute select-none">
@@ -127,7 +166,7 @@ function App() {
             <section className='slider-section w-full flex items-center justify-center'>
                 
                 {
-                    searchBarValue.trim() === '' ? <MovieSlider media={foundMovies} ratings={usersRating}/>
+                    searchBarValue.trim() === '' ? <MovieSlider media={foundMovies} ratings={usersRating} isLoading={isLoading}/>
                     : filteredSliderMovies.length > 0 ? <MovieSlider media={filteredSliderMovies} ratings={usersRating}/>
                     : <MovieSlider media={searchValueArray?.results ?? []} ratings={usersRating} />
                 }

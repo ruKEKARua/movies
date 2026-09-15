@@ -7,14 +7,17 @@ import useMovieImages from "../HooksTMDB/useMovieImages";
 import "swiper/css";
 import "swiper/css/navigation";
 import Button from "./UI/Button";
+import { getTmdbImageUrl } from "../api/tmdbImage";
+import type { MovieSource } from "../api/movieSource";
 
 type InfiniteSliderProps = {
   movie_ID: number;
+    source?: MovieSource;
 };
 
 type MovieImagesType = "posters" | "backdrops" | "logos";
 
-export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
+export default function InfiniteSlider({movie_ID, source = 'tmdb'}:InfiniteSliderProps) {
 
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
     const [postersType, setPostersType] = useState<MovieImagesType>('posters');
@@ -23,13 +26,12 @@ export default function InfiniteSlider({movie_ID}:InfiniteSliderProps) {
     const movieImages = useMovieImages({
         movie_id: movie_ID,
         postersType,
+        source,
     });
 
     const posterSize:string = 'w780';
-    const posterURLPlaceholder:string = `https://image.tmdb.org/t/p`;
-
     const backdropsURLs = movieImages.slice(0,21).map((image) => {
-        return `${posterURLPlaceholder}/${posterSize}${image.file_path}`;
+        return source === 'kinopoisk' ? image.file_path : getTmdbImageUrl(posterSize, image.file_path);
     })
 
     useEffect(() => {

@@ -2,6 +2,7 @@ import { useGoogleLogin } from '@react-oauth/google';
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setExcelMovies } from '../store/excelMovies';
+import { appendMovieToSheet, type MovieSheetEntry } from '../api/googleSheets';
 
 type GoogleSheetsResponse = {
     values?: string[][];
@@ -68,15 +69,20 @@ const useGetMovies = () => {
     const dispatch = useDispatch();
     const [data, setData] = useState<string[]>([]);
     const [usersRating, setUsersRating] = useState<MovieRatings[]>([]);
+    const [participantNames, setParticipantNames] = useState<string[]>([]);
     const [isAuthorized, setIsAuthorized] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
     const [userName, setUserName] = useState('');
     const [userPicture, setUserPicture] = useState('');
+    const [accessToken, setAccessToken] = useState('');
 
     const login = useGoogleLogin({
         scope: 'openid profile email https://www.googleapis.com/auth/spreadsheets',
 
         onSuccess: async ({ access_token }) => {
+            setAccessToken(access_token);
             setIsAuthorized(true);
+            setIsLoading(true);
 
             try {
                 const userResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -118,27 +124,45 @@ const useGetMovies = () => {
             };
 
             try {
-                const [moviesResponse, ratingsResponse] = await Promise.all([
+                const [moviesResponse, ratingsResponse, participantsResponse] = await Promise.all([
                     fetchRange('Киноклуб!C5:C'),
                     fetchRange('Киноклуб!C5:F', 'ROWS'),
+                    fetchRange('Сводная киноклуба!B3:B15'),
                 ]);
 
                 const movies = moviesResponse.values?.[0] ?? [];
                 const ratings = parseMovieRatings(ratingsResponse.values ?? []);
+                const participants = [...new Set(
+                    (participantsResponse.values?.[0] ?? [])
+                        .filter((name) => name !== '' && name !== 'Участники')
+                        .map((name) => name.trim())
+                        .filter(Boolean),
+                )];
 
                 setData(movies.filter((item) => item !== '' && item !== '2025' && item !== '2026'));
                 setUsersRating(ratings);
+                setParticipantNames(participants);
             } catch (error) {
                 console.error('Ошибка загрузки данных Google Sheets:', error);
+            } finally {
+                setIsLoading(false);
             }
         },
     });
+
+    const saveMovie = async (entry: MovieSheetEntry) => {
+        if (!accessToken) {
+            throw new Error('Необходимо авторизоваться в Google');
+        }
+
+        await appendMovieToSheet(accessToken, entry);
+    };
 
     useEffect(() => {
         dispatch(setExcelMovies(data));
     }, [data, dispatch]);
 
-    return { data, usersRating, login, isAuthorized, userName, userPicture };
+    return { data, usersRating, participantNames, login, isAuthorized, isLoading, userName, userPicture, saveMovie };
 };
 
 export default useGetMovies;

@@ -5,21 +5,24 @@ import Button from "./UI/Button";
 import useGetMovieInfo from "../HooksTMDB/useGetMovieInfo";
 import useGetConfiguration from "../HooksTMDB/useGetConfiguration";
 import type { MovieRatings } from "../HooksExcelMovies/useGetMovies";
+import { getTmdbImageUrl } from "../api/tmdbImage";
+import type { MovieSource } from "../api/movieSource";
 
 type ModalProps = {
 
     isHidden?: string;
     movie_ID: number;
+    source?: MovieSource;
     ratings: MovieRatings[];
     excelMovieTitle?: string;
 
 }
 
-const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: ModalProps) => {
+const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMovieTitle }: ModalProps) => {
     
     const dispatch = useDispatch();
     
-    const { data: movieInfo, error: movieError } = useGetMovieInfo(movie_ID);
+    const { data: movieInfo, error: movieError } = useGetMovieInfo(movie_ID, source);
     const { data: configTMDB, error: configError } = useGetConfiguration();
     const [isOnline, setIsOnline] = useState(() => navigator.onLine);
     const isLoading = !movieInfo || !configTMDB;
@@ -43,13 +46,12 @@ const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: Modal
 
 
     const posterSize = 'original';
-    const posterURLPlaceholder = configTMDB?.images.base_url;
     const hasError = isLoading && (!isOnline || Boolean(movieError || configError));
 
     const title = movieInfo?.title
     const description = movieInfo?.overview
-    const image = movieInfo && posterURLPlaceholder
-        ? `${posterURLPlaceholder}/${posterSize}/${movieInfo.poster_path}`
+    const image = movieInfo?.poster_path
+        ? source === 'kinopoisk' ? movieInfo.poster_path : getTmdbImageUrl(posterSize, movieInfo.poster_path)
         : null;
     const voteAverage = movieInfo?.vote_average;
     const excelRatings = excelMovieTitle
@@ -137,7 +139,7 @@ const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: Modal
 
             <div className="w-full h-full max-h-30 flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
                 
-                <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
+                        <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
                     Жанр
                 </h4>
                 
@@ -161,7 +163,7 @@ const Modal = ({isHidden = 'hidden', movie_ID, ratings, excelMovieTitle }: Modal
             <div className="w-full h-max p-2 flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
                 
                 <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
-                    Оценка на IMDB
+                    Оценка {source === 'kinopoisk' ? 'Кинопоиска' : 'TMDB'}
                 </h4>
                 
                 <div className="w-full flex flex-col justify-center text-slate-200 text-center">

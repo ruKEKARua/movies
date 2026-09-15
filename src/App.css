@@ -63,8 +63,12 @@ body {
 }
 
 .slider-section {
+  flex: 1 1 auto;
+  width: 100%;
   min-height: 0;
-  max-height: calc(100vh - 12rem);
+  max-height: none;
+  overflow-y: auto;
+  align-items: flex-start;
 }
 
 .movie-slider {
@@ -73,25 +77,38 @@ body {
 
 .movie-slider-frame {
   width: 100%;
-  height: clamp(25rem, 62vh, 38rem);
   min-height: 0;
 }
 
-.movie-slider-frame .swiper {
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 1rem;
+  padding: 1rem;
   width: 100%;
-  height: 100%;
-  overflow: hidden;
+  align-items: start;
 }
 
 .movie-slide {
-  height: 100%;
+  display: flex;
+  justify-content: center;
+  min-width: 0;
 }
 
 .movie-card {
   width: min(100%, 16rem);
-  height: 100%;
-  min-height: 0;
-  gap: clamp(0.5rem, 1.5vh, 1.25rem);
+  height: auto;
+  gap: 0.75rem;
+  position: relative;
+  transform-origin: center;
+  transition: transform 580ms ease;
+  z-index: 1;
+}
+
+.movie-card:hover,
+.movie-card:has(.movie-poster:focus-visible) {
+  transform: scale(1.2);
+  z-index: 20;
 }
 
 .movie-card > p {
@@ -103,7 +120,7 @@ body {
 }
 
 .movie-title {
-  flex: 0 0 clamp(4.25rem, 10vh, 5.25rem);
+  min-height: 3.5rem;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -118,15 +135,11 @@ body {
   min-height: 0;
   aspect-ratio: 2 / 3;
   flex: 0 1 auto;
-  max-height: calc(100% - 4rem);
 }
 
 .poster-clickable {
   cursor: pointer;
   position: relative;
-  transform-origin: center;
-  transition: transform 580ms ease, box-shadow 580ms ease;
-  z-index: 1;
 }
 
 .slider-edge-shadow {
@@ -139,8 +152,6 @@ body {
 
 .poster-clickable:hover,
 .poster-clickable:focus-visible {
-  transform: scale(1.2);
-  z-index: 20;
   outline: 2px solid #61b28a;
   outline-offset: 0.5px;
 }
@@ -188,10 +199,24 @@ body {
   display: flex;
   flex-direction: column;
   gap: 25px;
-  place-content: center;
+  justify-content: flex-start;
   place-items: center;
   flex-grow: 1;
+  min-height: 0;
+  overflow: hidden;
 
+}
+
+.app-entry-screen {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(14, 165, 233, 0.18), transparent 35%),
+    #020817;
+}
+
+.top-actions {
+  top: 1rem;
+  right: 1rem;
 }
 
 @media (max-width: 640px) {
@@ -244,13 +269,14 @@ body {
     flex: 1 1 auto;
   }
 
-  .movie-slider-frame {
-    height: min(68svh, 34rem);
-    min-height: 22rem;
-  }
-
   .movie-slide {
     padding: 0.75rem;
+  }
+
+  .movie-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0.5rem;
   }
 
   .movie-card {

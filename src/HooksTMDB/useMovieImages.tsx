@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { fetchTmdb } from "../api/tmdb";
+import { getMovieImagesFromSource } from "../api/movieSource";
+import type { MovieSource } from "../api/movieSource";
 
 
 type MovieImageData = {
@@ -28,15 +29,16 @@ type MovieImagesProps = {
 
     movie_id: number; 
     postersType: MovieImagesType;
+    source?: MovieSource;
 
 }
 
-const useMovieImages = ({ movie_id, postersType }: MovieImagesProps) => {
+const useMovieImages = ({ movie_id, postersType, source }: MovieImagesProps) => {
   const [data, setData] = useState<MovieImageData[]>([]);
 
     useEffect(() => {
 
-      fetchTmdb<MovieImagesResponse>(`/movie/${movie_id}/images`)
+      getMovieImagesFromSource(movie_id, source)
 
             .then((res) => {
 
@@ -46,7 +48,7 @@ const useMovieImages = ({ movie_id, postersType }: MovieImagesProps) => {
             
             .catch((err) => console.error(err));
 
-    }, [movie_id, postersType]);
+    }, [movie_id, postersType, source]);
 
     return data;
 

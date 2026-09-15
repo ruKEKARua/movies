@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
-import { fetchTmdb } from "../api/tmdb";
+import { getPopularMoviesFromSource } from "../api/movieSource";
 
 
 type PopularMovieData = {
@@ -22,10 +22,8 @@ const usePopularMovies = (page:number) => {
 
     useEffect(() => {
 
-        fetchTmdb<{ results: PopularMovieData[] }>(`/movie/popular?language=ru-ru&page=${page}`)
-            .then(res => {
-                setData(res.results)
-            })
+        getPopularMoviesFromSource(page)
+            .then(res => setData(res))
             .catch(err => console.error(err));
     
 

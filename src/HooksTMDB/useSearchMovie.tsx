@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchTmdb } from '../api/tmdb';
+import { searchMoviesFromSource, type NormalizedMovie } from '../api/movieSource';
 
 
 
@@ -36,7 +36,7 @@ type KnownForMovie = {
 };
 
 type MovieSliderProps = {
-  results: Media[];
+    results: (Media | NormalizedMovie)[];
 };
 
 const useSearchMovie = (searchValue: string) => {
@@ -46,11 +46,15 @@ const useSearchMovie = (searchValue: string) => {
 
     useEffect(() => {
 
-        fetchTmdb<MovieSliderProps>(`/search/multi?query=${searchValue}&include_adult=false&language=ru-ru&page=1`)
-            .then(res => {
-                setData(res)
-            })
-            .catch(err => console.error(err));
+        if (!searchValue.trim()) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => searchMoviesFromSource(searchValue)
+            .then(results => setData({ results }))
+            .catch(err => console.error(err)), 500);
+
+        return () => window.clearTimeout(timeoutId);
     
 
     }, [searchValue])

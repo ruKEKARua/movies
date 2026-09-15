@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { changeSliderPosition } from "../store/sliderMove";
-import { fetchTmdb } from "../api/tmdb";
+import { getPopularMoviesFromSource } from "../api/movieSource";
 
 
 type Movie = {
@@ -41,10 +41,8 @@ const useMoviesData = (page:number=1) => {
 
     useEffect(() => {
 
-        fetchTmdb<{ results: Movie[]|Person[] }>(`/discover/movie?include_adult=false&include_video=false&language=ru-ru&page=${page}&sort_by=vote_count.desc`)
-            .then(res => {
-                setData(res.results)
-            })
+        getPopularMoviesFromSource(page)
+            .then(res => setData(res))
             .catch(err => console.error(err));
 
         dispatch(changeSliderPosition(0));

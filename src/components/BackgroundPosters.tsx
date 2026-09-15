@@ -1,13 +1,12 @@
 import usePopularMovies from '../HooksTMDB/usePopularMovies';
+import { getTmdbImageUrl } from '../api/tmdbImage';
 
 const BackgroundPosters = ({page, direction}:{page:number, direction?:boolean}) => {
 
     const popularMoviesArray = usePopularMovies(page);
     const posterSize:string = 'w92';
-    const posterURLPlaceholder:string = `https://image.tmdb.org/t/p`;
-
     const postersURL = popularMoviesArray.map((image) => {
-        return `${posterURLPlaceholder}/${posterSize}${image.poster_path}`;
+        return getTmdbImageUrl(posterSize, image.poster_path);
     })
 
     //const newPostersURL = [...postersURL, ...postersURL]

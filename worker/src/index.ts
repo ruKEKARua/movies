@@ -3,6 +3,7 @@ const allowedOrigins = new Set([
   "http://localhost:5173",
 ]);
 const tmdbApiUrl = "https://api.themoviedb.org/3";
+const tmdbImageUrl = "https://image.tmdb.org/t/p";
 
 function corsHeaders(origin: string | null): HeadersInit {
   const responseOrigin = origin && allowedOrigins.has(origin)
@@ -31,6 +32,21 @@ export default {
     }
 
     const url = new URL(request.url);
+
+    if (url.pathname.startsWith("/image/")) {
+      const imagePath = url.pathname.replace(/^\/image/, "");
+      const imageResponse = await fetch(`${tmdbImageUrl}${imagePath}${url.search}`);
+
+      return new Response(imageResponse.body, {
+        status: imageResponse.status,
+        headers: {
+          ...headers,
+          "Content-Type": imageResponse.headers.get("Content-Type") ?? "image/jpeg",
+          "Cache-Control": "public, max-age=86400",
+        },
+      });
+    }
+
     const tmdbPath = url.pathname.replace(/^\/tmdb/, "");
 
     if (url.pathname === "/" || url.pathname === "/tmdb" || url.pathname === "/tmdb/") {

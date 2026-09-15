@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchTmdb } from '../api/tmdb';
+import { detectMovieSource } from '../api/movieSource';
 
 type ConfigAPI = {
 
@@ -28,7 +29,20 @@ const useGetConfiguration = () => {
     useEffect(() => {
         setError(null);
 
-        fetchTmdb<ConfigAPI>(`/configuration`)
+        detectMovieSource().then((source) => source === 'kinopoisk'
+            ? {
+                change_keys: [],
+                images: {
+                    base_url: '',
+                    secure_base_url: '',
+                    backdrop_sizes: [],
+                    logo_sizes: [],
+                    poster_sizes: [],
+                    profile_sizes: [],
+                    still_sizes: [],
+                },
+            }
+            : fetchTmdb<ConfigAPI>('/configuration'))
             .then(res => {
                 setData(res)
             })

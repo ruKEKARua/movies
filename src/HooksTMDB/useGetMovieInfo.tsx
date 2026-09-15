@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { fetchTmdb } from '../api/tmdb';
+import { useEffect, useRef, useState } from 'react'
+import { getMovieDetailsFromSource } from '../api/movieSource';
+import type { MovieDetails, MovieSource } from '../api/movieSource';
 
 type MovieData = {
     adult: boolean;
@@ -52,26 +53,35 @@ type Spokenlanguages = {
 }
 
 
-const useGetMovieInfo = (movieId: number) => {
+const useGetMovieInfo = (movieId: number, source?: MovieSource) => {
 
-    const [data, setData] = useState<MovieData | null>(null);
+    const [data, setData] = useState<MovieData | MovieDetails | null>(null);
     const [error, setError] = useState<Error | null>(null);
+    const requestIdRef = useRef(0);
 
     useEffect(() => {
+        const requestId = ++requestIdRef.current;
+
         setData(null);
         setError(null);
 
-        fetchTmdb<MovieData>(`/movie/${movieId}?language=ru-ru`)
-            .then(res => {
-                setData(res)
+        getMovieDetailsFromSource(movieId, source)
+            .then((res) => {
+                if (requestId !== requestIdRef.current) {
+                    return;
+                }
+
+                setData(res);
             })
-            .catch(err => {
+            .catch((err) => {
+                if (requestId !== requestIdRef.current) {
+                    return;
+                }
+
                 console.error(err);
                 setError(err instanceof Error ? err : new Error('Не удалось загрузить информацию о фильме'));
             });
-    
-
-    }, [movieId])
+    }, [movieId, source]);
 
     return { data, error };
 }

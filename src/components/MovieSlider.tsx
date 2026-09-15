@@ -1,17 +1,14 @@
-import { useRef, useState } from "react";
-import Button from "./UI/Button";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { openModal } from "../store/openModal";
 import Modal from "./Modal";
 import type { RootState } from "../store/store";
 
-// import Swiper styles
-import 'swiper/css';
-import { Swiper, SwiperSlide } from "swiper/react";
-import { FreeMode, Navigation } from "swiper/modules";
 import MovieCard from "./MovieCard";
 import type { MovieRatings } from "../HooksExcelMovies/useGetMovies";
+import { getTmdbImageUrl } from "../api/tmdbImage";
+import type { MovieSource } from "../api/movieSource";
 
 
 type Movie = {
@@ -22,7 +19,7 @@ type Movie = {
     original_title: string; // название на оригинальном языке (в частности английский)
     title: string; // название на русском
     overview: string; // описание
-    poster_path: string; // постер на русском
+    poster_path: string | null; // постер на русском
     excelTitle?: string;
 
 };
@@ -35,7 +32,7 @@ type Person = {
     name: string; // имя на русском
     original_name: string; // имя на оригинальном языке (в частности английский)
     known_for: KnownForMovie[]; // массив из фильмов, в которых учавствовал актёр
-    profile_path: string; // ссылка на фото актёра
+    profile_path: string | null; // ссылка на фото актёра
     known_for_department: string // "описание", например "Актёр" (актёрская деятельность)
 
 };
@@ -50,28 +47,26 @@ type KnownForMovie = {
 type MovieSliderProps = {
   media: Media[];
     ratings: MovieRatings[];
+        isLoading?: boolean;
 };
 
 
-export function MovieSlider({ media, ratings }: MovieSliderProps ) {
+export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderProps ) {
     
     const dispatch = useDispatch();
     
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
-    const page = useSelector((state: RootState) => state.numberOfPageInSlider.value)
-    
 
     const [movie_ID, setMovie_ID] = useState<number | null>(null);
     const [excelMovieTitle, setExcelMovieTitle] = useState<string | undefined>();
-    const swiperRef = useRef<{ slidePrev: () => void; slideNext: () => void } | null>(null);
+    const [movieSource, setMovieSource] = useState<MovieSource>('tmdb');
 
     const posterSize = 'w780';
-    const posterURLPlaceholder = `https://image.tmdb.org/t/p`;
-
-    const openDescription = (movieID:number, sourceTitle?: string) => {
+    const openDescription = (movieID:number, sourceTitle?: string, source: MovieSource = 'tmdb') => {
         
         setMovie_ID(movieID)
         setExcelMovieTitle(sourceTitle)
+        setMovieSource(source)
         
         
         dispatch(openModal())
@@ -87,30 +82,8 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
 
                 <SearchBar/> <br></br>
             </div>         */}
-                <div className="movie-slider-frame relative flex items-center justify-center rounded-3xl shadow-[inset-20] select-auto page-enter" key={page}>
-
-
-                    <Swiper
-
-                        modules={[Navigation, FreeMode]}
-                        slidesPerView={1}
-                        slidesPerGroup={1}
-                        breakpoints={{
-                            560: { slidesPerView: 2 },
-                            900: { slidesPerView: media.length > 3 ? 3.25 : media.length },
-                        }}
-                        
-                        pagination={true}
-
-                        freeMode={{momentum:false, enabled:false}}
-                        loop={true}
-                        onSwiper={(swiper) => {
-                            swiperRef.current = swiper;
-                        }}
-                    
-
-                        className="rounded-3xl bg-gray-600/10"
-                    >
+                <div className="movie-slider-frame relative rounded-3xl shadow-[inset-20] select-auto page-enter">
+                    <div className="movie-grid rounded-3xl bg-gray-600/10">
 
                         {
                             media.map((media, key) => {
@@ -120,7 +93,9 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                                     const movieVariables: Movie = {
                                         
                                         media_type: media.media_type,
-                                        poster_path: `${posterURLPlaceholder}/${posterSize}/${media.poster_path}`,
+                                        poster_path: 'source' in media && media.source === 'kinopoisk'
+                                            ? media.poster_path
+                                            : getTmdbImageUrl(posterSize, media.poster_path),
                                         title: media.title,
                                         original_title: media.original_title,
                                         overview: media.overview,
@@ -130,21 +105,27 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
 
                                     const title = movieVariables.title ? movieVariables.title : movieVariables.original_title;
                                     const id = movieVariables.id;
-                                    const posterPath = movieVariables.poster_path;
+                                    const posterPath = movieVariables.poster_path ?? '';
 
                                     return (
 
                                         
-                                        <SwiperSlide key={key} className="movie-slide p-5">
+                                        <div key={key} className="movie-slide p-5">
                                         
                                             <MovieCard
                                                 id={id}
                                                 title={title}
                                                 posterPath={posterPath}
-                                                func={(movieID) => openDescription(movieID, media.excelTitle)}
+                                                func={(movieID) => openDescription(
+                                                    movieID,
+                                                    media.excelTitle,
+                                                    'source' in media && (media.source === 'tmdb' || media.source === 'kinopoisk')
+                                                        ? media.source
+                                                        : 'tmdb',
+                                                )}
                                             />
 
-                                        </SwiperSlide>
+                                        </div>
 
                                     )
 
@@ -158,7 +139,7 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                                     name: media.name,
                                     original_name: media.original_name,
                                     known_for: media.known_for,
-                                    profile_path: `${posterURLPlaceholder}/${posterSize}/${media.profile_path}`,
+                                    profile_path: getTmdbImageUrl(posterSize, media.profile_path),
                                     known_for_department: media.known_for_department
 
                                 }
@@ -172,7 +153,7 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                                 const placeholderImage = `https://placehold.co/780x1170?text=${russianName}`;
 
                                 return(
-                                    <SwiperSlide key={key} className="movie-slide p-5">
+                                    <div key={key} className="movie-slide p-5">
 
                                         <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={media.id} >
 
@@ -193,61 +174,27 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
                                                 }
                                             }}
                                             >
-                                                <img src={personVariables.profile_path == 'https://image.tmdb.org/t/p/w780/null' ? placeholderImage : image} alt={russianName || originalName} className="movie-poster-image m-auto rounded-2xl"/>
+                                                <img src={image || placeholderImage} alt={russianName || originalName} className="movie-poster-image m-auto rounded-2xl"/>
                                             
                                             </div>
 
                                         </div>
 
-                                    </SwiperSlide>
+                                    </div>
                                 )
                             })
                         }
 
-                    </Swiper>
-
-                    <div
-                        className={`slider-edge-shadow pointer-events-none absolute inset-0 z-10 rounded-3xl
-                            ${media.length < 4 ? 'opacity-0' : ''}
-                            `}
-                    />
-
-                    <div className="slider-controls pointer-events-none absolute z-20 flex justify-between">
-                        <Button
-                            onClick={() => swiperRef.current?.slidePrev()}
-                            className="
-                            pointer-events-auto w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center rotate-180 prevButton"
-                            children={
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 5L15 12L8 19" 
-                                        stroke="#61b28a" 
-                                        strokeWidth="3" 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round"
-                                        />
-                                </svg>} />
-
-                        <Button
-                            onClick={() => swiperRef.current?.slideNext()}
-                            className="
-                            pointer-events-auto w-10 h-10 bg-green-100 text-white rounded-full flex items-center justify-center nextButton"
-                            children={
-                                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 5L15 12L8 19" 
-                                        stroke="#61b28a" 
-                                        strokeWidth="3" 
-                                        strokeLinecap="round" 
-                                        strokeLinejoin="round"
-                                        />
-                                </svg>} />
                     </div>
 
 
                     {/* если true, то класс hidden снимается, иначе происходит отображение модального окна */}
                     {isModalOpen && movie_ID !== null && (
                     <Modal
+                        key={movie_ID}
                         isHidden=""
                         movie_ID={movie_ID}
+                        source={movieSource}
                         ratings={ratings}
                         excelMovieTitle={excelMovieTitle}
                     />
@@ -256,7 +203,17 @@ export function MovieSlider({ media, ratings }: MovieSliderProps ) {
             </div>  
 
         :   <div className="empty-slider flex items-center justify-center">
-                <h1>Ничего не найдено</h1>
+                {isLoading ? (
+                    <div className="flex items-center gap-3" role="status" aria-live="polite">
+                        <span className="text-4xl font-bold">Загружаем фильмы</span>
+                        <span
+                            aria-label="Загрузка"
+                            className="w-10 h-10 animate-spin rounded-full border-2 border-slate-300 border-t-indigo-600"
+                        />
+                    </div>
+                ) : (
+                    <h1>Ничего не найдено</h1>
+                )}
             </div>
     );
 }
