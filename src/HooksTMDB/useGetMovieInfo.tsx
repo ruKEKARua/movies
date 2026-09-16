@@ -62,9 +62,6 @@ const useGetMovieInfo = (movieId: number, source?: MovieSource) => {
     useEffect(() => {
         const requestId = ++requestIdRef.current;
 
-        setData(null);
-        setError(null);
-
         getMovieDetailsFromSource(movieId, source)
             .then((res) => {
                 if (requestId !== requestIdRef.current) {

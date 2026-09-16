@@ -75,14 +75,11 @@ async function searchKinopoiskMovies(query: string): Promise<NormalizedMovie[]> 
 }
 
 export async function searchMoviesFromSource(query: string): Promise<NormalizedMovie[]> {
-    const results = await Promise.allSettled([searchTmdbMovies(query), searchKinopoiskMovies(query)]);
-    const movies = results.flatMap((result) => result.status === 'fulfilled' ? result.value : []);
-
-    if (movies.length === 0) {
-        throw new Error('Оба источника не вернули фильмы');
+    try {
+        return await searchTmdbMovies(query);
+    } catch {
+        return await searchKinopoiskMovies(query);
     }
-
-    return movies;
 }
 
 export async function getPopularMoviesFromSource(page: number): Promise<NormalizedMovie[]> {

@@ -23,7 +23,7 @@ type KinopoiskSearchResponse = {
     films?: KinopoiskFilm[];
 };
 
-const kinopoiskRequestIntervalMs = 100;
+const kinopoiskRequestIntervalMs = 250;
 let nextKinopoiskRequestAt = 0;
 let requestQueue = Promise.resolve();
 

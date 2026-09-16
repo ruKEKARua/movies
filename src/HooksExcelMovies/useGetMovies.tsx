@@ -21,6 +21,7 @@ export type MovieRating = {
 
 export type MovieRatings = {
     movie: string;
+    date?: string;
     ratings: MovieRating[];
 };
 
@@ -42,7 +43,36 @@ const parseMovieRatings = (rows: string[][]): MovieRatings[] => {
             continue;
         }
 
+        const isMovieHeader = /^\d{1,2}[./-]\d{1,2}[./-]\d{2,4}$/.test(String(values[0] ?? ''))
+            || /^\d{4}[./-]\d{1,2}[./-]\d{1,2}$/.test(String(values[0] ?? ''));
+
+        if (isMovieHeader) {
+            const [date, movieName, userName, ...scores] = values;
+
+            if (!currentMovie || currentMovie.movie !== movieName) {
+                if (currentMovie) {
+                    movies.push(currentMovie);
+                }
+
+                currentMovie = {
+                    movie: movieName,
+                    date,
+                    ratings: [],
+                };
+            }
+
+            if (userName) {
+                currentMovie.ratings.push({
+                    userName,
+                    scores: scores.filter(Boolean),
+                });
+            }
+
+            continue;
+        }
+
         const [movieOrUser, userOrScore, ...scores] = values;
+
         if (!currentMovie) {
             currentMovie = {
                 movie: movieOrUser,
@@ -126,7 +156,7 @@ const useGetMovies = () => {
             try {
                 const [moviesResponse, ratingsResponse, participantsResponse] = await Promise.all([
                     fetchRange('Киноклуб!C5:C'),
-                    fetchRange('Киноклуб!C5:F', 'ROWS'),
+                    fetchRange('Киноклуб!B5:F', 'ROWS'),
                     fetchRange('Сводная киноклуба!B3:B15'),
                 ]);
 

@@ -3,17 +3,20 @@ type MovieCardProps = {
     id: number;
     title: string;
     posterPath: string;
+    overallRating?: string;
     func: (id: number) => void;
 
 }
 
-const MovieCard = ({id=0, title = '', posterPath = '', func}: MovieCardProps) => {
+const MovieCard = ({id=0, title = '', posterPath = '', overallRating, func}: MovieCardProps) => {
   return (
     <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={id} >
 
-        <p className="movie-title text-white">
-            {title}
-        </p>
+        <div className="movie-title-container">
+            <p className="movie-title text-white">
+                {title}
+            </p>
+        </div>
 
         <div
             className="movie-poster poster-clickable m-auto rounded-2xl"
@@ -29,6 +32,14 @@ const MovieCard = ({id=0, title = '', posterPath = '', func}: MovieCardProps) =>
             }}
         >
         <img src={posterPath} alt={title} className="movie-poster-image m-auto rounded-2xl"/>
+
+        {overallRating && (
+            <div className="movie-rating">
+                <p className="w-8 h-5" aria-label={`Общая оценка: ${overallRating}`}>
+                    {overallRating}
+                </p>
+            </div>
+        )}
 
         </div>
 

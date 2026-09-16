@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { setFoundMovies } from '../store/foundMovies';
 import findMovieBySearchTitle from './useGetMovieBySearchName';
@@ -6,16 +6,20 @@ import findMovieBySearchTitle from './useGetMovieBySearchName';
 
 const useSetArrayOfSearchedMovies = (titles: string[]) => {
   const dispatch = useDispatch();
+  const [isLoaded, setIsLoaded] = useState(titles.length === 0);
 
   useEffect(() => {
-    if (titles.length === 0) {
-      dispatch(setFoundMovies([]));
-      return;
-    }
-
     let cancelled = false;
 
     async function loadMovies() {
+      setIsLoaded(false);
+
+      if (titles.length === 0) {
+        dispatch(setFoundMovies([]));
+        setIsLoaded(true);
+        return;
+      }
+
       const responses = await Promise.allSettled(
         titles.map((title) => findMovieBySearchTitle(title))
       );
@@ -36,6 +40,7 @@ const useSetArrayOfSearchedMovies = (titles: string[]) => {
         }));
 
       dispatch(setFoundMovies(movies));
+      setIsLoaded(true);
     }
 
     loadMovies();
@@ -44,6 +49,8 @@ const useSetArrayOfSearchedMovies = (titles: string[]) => {
       cancelled = true;
     };
   }, [titles, dispatch]);
+
+  return isLoaded;
 };
 
 export default useSetArrayOfSearchedMovies;

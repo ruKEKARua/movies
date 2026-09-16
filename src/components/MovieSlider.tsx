@@ -75,7 +75,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
 
 
     return (
-        media.length > 0 ? <div className="movie-slider">
+        !isLoading && media.length > 0 ? <div className="movie-slider">
 
             {/* <div>
                 <h1 className="">Номер страницы: {page}</h1>
@@ -106,6 +106,9 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                                     const title = movieVariables.title ? movieVariables.title : movieVariables.original_title;
                                     const id = movieVariables.id;
                                     const posterPath = movieVariables.poster_path ?? '';
+                                    const overallRating = media.excelTitle
+                                        ? ratings.find((movie) => movie.movie.trim().toLowerCase() === media.excelTitle?.trim().toLowerCase())?.ratings[0]?.scores[1]
+                                        : undefined;
 
                                     return (
 
@@ -116,6 +119,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                                                 id={id}
                                                 title={title}
                                                 posterPath={posterPath}
+                                                overallRating={overallRating}
                                                 func={(movieID) => openDescription(
                                                     movieID,
                                                     media.excelTitle,

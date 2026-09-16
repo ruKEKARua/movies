@@ -54,10 +54,12 @@ const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMo
         ? source === 'kinopoisk' ? movieInfo.poster_path : getTmdbImageUrl(posterSize, movieInfo.poster_path)
         : null;
     const voteAverage = movieInfo?.vote_average;
-    const excelRatings = excelMovieTitle
-        ? ratings.find((movie) => movie.movie.trim().toLowerCase() === excelMovieTitle.trim().toLowerCase())?.ratings ?? []
-        : [];
+    const excelMovie = excelMovieTitle
+        ? ratings.find((movie) => movie.movie.trim().toLowerCase() === excelMovieTitle.trim().toLowerCase())
+        : undefined;
+    const excelRatings = excelMovie?.ratings ?? [];
     const overallRating = excelRatings[0]?.scores[1];
+    const watchDate = excelMovie?.date ? formatDateFromExcel(excelMovie.date) : '';
 
     const closeModalHandler = () => {
             
@@ -86,6 +88,29 @@ const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMo
         ];
 
         return `${day} ${months[Number(month) - 1]} ${year}`;
+    }
+
+    function formatDateFromExcel(date: string): string {
+        const normalizedDate = date.trim();
+        const match = normalizedDate.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/)
+            || normalizedDate.match(/^(\d{4})[./-](\d{1,2})[./-](\d{1,2})$/);
+
+        if (!match) {
+            return normalizedDate;
+        }
+
+        const [, first, second, third] = match;
+        const day = Number(first.length === 4 ? third : first);
+        const month = Number(first.length === 4 ? second : second);
+        const year = Number(first.length === 4 ? first : third);
+
+        const months = [
+            "января", "февраля", "марта", "апреля",
+            "мая", "июня", "июля", "августа",
+            "сентября", "октября", "ноября", "декабря",
+        ];
+
+        return `${day} ${months[month - 1]} ${year}`;
     }
 
     if (isLoading) {
@@ -204,16 +229,24 @@ const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMo
                     </div>
                     {overallRating && (
                         <p className="mt-1 flex h-8 items-center justify-center border-t border-slate-300 text-center font-semibold leading-5 dark:border-slate-600">
-                            Общий результат: {overallRating}
+                            Средняя оценка: {overallRating}
                         </p>
                     )}
                 </div>
             )}
 
-            <div className="w-full h-max flex flex-col items-center justify-center rounded-2xl bg-white transition-all dark:bg-slate-800">
+            <div className="w-full h-max flex flex-col items-center justify-center rounded-2xl bg-white p-1 transition-all dark:bg-slate-800">
                 
-                <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full p-1">
+                <h3 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
                     Год выпуска — {formatDate(String(movieInfo?.release_date))}
+                </h3>
+
+            </div>
+
+            <div className="w-full h-max flex flex-col items-center justify-center rounded-2xl bg-white p-1 transition-all dark:bg-slate-800">
+                
+                <h4 className="text-lg text-center font-semibold text-slate-900 dark:text-white w-full">
+                    Дата просмотра — {watchDate}
                 </h4>
 
             </div>

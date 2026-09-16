@@ -27,8 +27,6 @@ const useGetConfiguration = () => {
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
-        setError(null);
-
         detectMovieSource().then((source) => source === 'kinopoisk'
             ? {
                 change_keys: [],

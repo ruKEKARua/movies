@@ -14,15 +14,65 @@ import useSearchMovie from './HooksTMDB/useSearchMovie';
 import { setSearchBarValue } from './store/searchBar';
 import useSetArrayOfSearchedMovies from './HooksTMDB/useSetArrayOfSearchedMovies';
 import MovieEntryPage from './pages/MovieEntryPage';
+import type { MovieRatings } from './HooksExcelMovies/useGetMovies';
+import type { NormalizedMovie } from './api/movieSource';
+import MovieRoulette from './components/MovieRoulette';
 
 
-type PageMode = 'main' | 'entry';
+type PageMode = 'main' | 'entry' | 'roulette';
+type SortOrder = 'added' | 'top-rated' | 'low-rated' | 'alphabetical';
+
+type SortableMedia = {
+    title?: string;
+    original_title?: string;
+    name?: string;
+    original_name?: string;
+    excelTitle?: string;
+};
+
+const getRating = (movie: SortableMedia, ratings: MovieRatings[]) => {
+    const movieTitle = (movie.excelTitle ?? movie.title ?? movie.original_title)?.trim().toLowerCase();
+    const sheetRating = movieTitle
+        ? ratings.find((rating) => rating.movie.trim().toLowerCase() === movieTitle)?.ratings[0]?.scores[1]
+        : undefined;
+    const ratingNumber = sheetRating?.replace(',', '.').match(/-?\d+(?:\.\d+)?/)?.[0];
+    const parsedSheetRating = Number(ratingNumber);
+
+    return Number.isFinite(parsedSheetRating) ? parsedSheetRating : undefined;
+};
+
+const sortMovies = <T extends SortableMedia>(movies: T[], sortOrder: SortOrder, ratings: MovieRatings[]) => {
+    if (sortOrder === 'added') {
+        return movies;
+    }
+
+    return [...movies].sort((firstMovie, secondMovie) => {
+        if (sortOrder === 'alphabetical') {
+            const firstTitle = firstMovie.title ?? firstMovie.name ?? firstMovie.original_title ?? firstMovie.original_name ?? '';
+            const secondTitle = secondMovie.title ?? secondMovie.name ?? secondMovie.original_title ?? secondMovie.original_name ?? '';
+
+            return firstTitle.localeCompare(secondTitle, 'ru', { sensitivity: 'base' });
+        }
+
+        const firstRating = getRating(firstMovie, ratings);
+        const secondRating = getRating(secondMovie, ratings);
+
+        if (firstRating === undefined && secondRating === undefined) return 0;
+        if (firstRating === undefined) return 1;
+        if (secondRating === undefined) return -1;
+
+        return sortOrder === 'top-rated'
+            ? secondRating - firstRating
+            : firstRating - secondRating;
+    });
+};
 
 function App() {
 
     const dispatch = useDispatch();
     const [page, setPage] = useState<PageMode>('main');
     const [isAddMovieRequested, setIsAddMovieRequested] = useState(false);
+    const [sortOrder, setSortOrder] = useState<SortOrder>('added');
 
     const searchBarValue = useSelector((state: RootState) => state.searchBarValue.value);
     const moviesFromExcel = useSelector((state: RootState) => state.setExcelMovies.value)
@@ -44,7 +94,17 @@ function App() {
         : foundMovies;
 
     const { login, isAuthorized, isLoading, userName, userPicture, usersRating, participantNames, saveMovie } = useGetMovies();
-    useSetArrayOfSearchedMovies(moviesFromExcel);
+    const areMoviesLoaded = useSetArrayOfSearchedMovies(moviesFromExcel);
+
+    const sortedFoundMovies = sortMovies(foundMovies, sortOrder, usersRating);
+    const sortedFilteredMovies = sortMovies(filteredSliderMovies, sortOrder, usersRating);
+    const sortedSearchMovies = sortMovies(searchValueArray?.results ?? [], sortOrder, usersRating);
+    const displayedMovies = searchBarValue.trim() === ''
+        ? sortedFoundMovies
+        : sortedFilteredMovies.length > 0
+            ? sortedFilteredMovies
+            : sortedSearchMovies;
+    const isCatalogLoading = isLoading || !areMoviesLoaded;
 
     const randomNumber = (min:number, max:number) => {
 
@@ -72,6 +132,10 @@ function App() {
 
     }, [foundMovies, moviesFromExcel, searchValueArray, usersRating])
 
+
+    if (page === 'roulette') {
+        return <MovieRoulette excelMovies={foundMovies.filter((movie) => movie.media_type !== 'person') as unknown as NormalizedMovie[]} isAuthorized={isAuthorized} login={login} ratings={usersRating} onClose={() => setPage('main')} />;
+    }
 
     if (page === 'entry' || (isAddMovieRequested && isAuthorized)) {
         return (
@@ -119,6 +183,11 @@ function App() {
 
             <div className='top-actions absolute right-4 top-4 z-20 flex gap-2'>
                 <Button
+                    className='rounded-xl bg-orange-400 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-orange-300'
+                    onClick={() => setPage('roulette')}
+                    label='Рулетка фильмов'
+                />
+                <Button
                     className='rounded-xl bg-emerald-500 px-4 py-2 text-sm font-medium text-slate-950 transition hover:bg-emerald-400'
                     onClick={() => {
                         if (isAuthorized) {
@@ -132,7 +201,6 @@ function App() {
                     label={isAuthorized ? 'Добавить фильм' : 'Войти и добавить фильм'}
                 />
             </div>
-
         <div className="background-layer w-screen h-screen overflow-hidden flex items-center justify-center absolute select-none">
             <section className="
                 absolute left-1/2 top-1/2 
@@ -147,6 +215,8 @@ function App() {
 
             </section>
         </div>
+        {isAuthorized ? (
+        <>
 
         <section id="center" className='app-content relative z-1 flex flex-col justify-center items-center w-screen h-screen'>
 
@@ -163,14 +233,42 @@ function App() {
                 </div>
             </header>
 
-            <section className='slider-section w-full flex items-center justify-center'>
-                
-                {
-                    searchBarValue.trim() === '' ? <MovieSlider media={foundMovies} ratings={usersRating} isLoading={isLoading}/>
-                    : filteredSliderMovies.length > 0 ? <MovieSlider media={filteredSliderMovies} ratings={usersRating}/>
-                    : <MovieSlider media={searchValueArray?.results ?? []} ratings={usersRating} />
-                }
-            
+            <section className='slider-section w-full'>
+            <div 
+              className='catalog-layout' 
+                            style={{
+                                    gridTemplateColumns: !isCatalogLoading && displayedMovies.length > 0
+                                            ? 'minmax(13rem, 16rem) minmax(0, 1fr)'
+                                            : '1fr',
+                            }}>                    
+                {!isCatalogLoading && displayedMovies.length > 0 && (
+                        <aside className='sort-settings' aria-label='Настройки сортировки фильмов'>
+                            <p className='sort-settings-title'>Настройки</p>
+                            <label className='sort-settings-label' htmlFor='movie-sort'>
+                                Сортировка фильмов
+                            </label>
+                            <select
+                                className='sort-settings-select'
+                                id='movie-sort'
+                                value={sortOrder}
+                                onChange={(event) => setSortOrder(event.target.value as SortOrder)}
+                            >
+                                <option value='added'>По порядку добавления</option>
+                                <option value='top-rated'>Сначала топовые</option>
+                                <option value='low-rated'>Сначала худшие</option>
+                                <option value='alphabetical'>По алфавиту</option>
+                            </select>
+                        </aside>
+                    )}
+
+                    <div className='movie-slider-container'>
+                        {
+                            searchBarValue.trim() === '' ? <MovieSlider media={sortedFoundMovies} ratings={usersRating} isLoading={isCatalogLoading}/>
+                            : sortedFilteredMovies.length > 0 ? <MovieSlider media={sortedFilteredMovies} ratings={usersRating} isLoading={isCatalogLoading}/>
+                            : <MovieSlider media={sortedSearchMovies} ratings={usersRating} isLoading={isCatalogLoading} />
+                        }
+                    </div>
+                </div>
             </section>
                 
             {/* <section>
@@ -185,6 +283,10 @@ function App() {
               
          
         </section>
+                </>
+                ) : (
+                        <div className='login-prompt'>Войдите в учётную запись</div>
+                )}
       
       </>
     )
