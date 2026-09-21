@@ -9,11 +9,21 @@ import type { RootState } from '../store/store';
 import type { MovieRatings } from '../HooksExcelMovies/useGetMovies';
 
 type RouletteMode = 'elimination' | 'winner';
-type RouletteSource = 'excel' | 'online';
+type RouletteSource = 'excel' | 'online' | 'text';
 
-type RouletteMovie = NormalizedMovie & {
+type MovieRouletteMovie = NormalizedMovie & {
     excelTitle?: string;
 };
+
+type TextRouletteMovie = {
+    id: string;
+    title: string;
+    original_title: string;
+    source: 'text';
+    text: string;
+};
+
+type RouletteMovie = MovieRouletteMovie | TextRouletteMovie;
 
 type MovieRouletteProps = {
     excelMovies: RouletteMovie[];
@@ -39,9 +49,16 @@ const randomIndex = (length: number) => {
     return buffer[0] % length;
 };
 
+const randomFraction = () => {
+    const buffer = new Uint32Array(1);
+    crypto.getRandomValues(buffer);
+    return buffer[0] / 0x100000000;
+};
+
 const movieTitle = (movie: RouletteMovie) => movie.title || movie.original_title || 'Без названия';
 
-const movieKey = (movie: RouletteMovie) => `${movie.source}-${movie.id}-${movie.excelTitle ?? ''}`;
+const movieKey = (movie: RouletteMovie) => `${movie.source}-${movie.id}-${'excelTitle' in movie ? movie.excelTitle ?? '' : ''}`;
+const isTextMovie = (movie: RouletteMovie): movie is TextRouletteMovie => movie.source === 'text';
 const wheelColors = ['#343946', '#252936'];
 const wheelDivider = '#171920';
 const wheelDividerAngle = 0.2;
@@ -69,6 +86,7 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
     const [source, setSource] = useState<RouletteSource>('excel');
     const [mode, setMode] = useState<RouletteMode>('elimination');
     const [query, setQuery] = useState('');
+    const [textValue, setTextValue] = useState('');
     const [onlineResults, setOnlineResults] = useState<RouletteMovie[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [searchError, setSearchError] = useState('');
@@ -116,6 +134,7 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
     const selectedKeys = new Set(selectedMovies.map(movieKey));
 
     const availableMovies = useMemo(() => {
+        if (source === 'text') return [];
         if (source === 'online') return query.trim() ? onlineResults : [];
 
         const normalizedQuery = query.trim().toLocaleLowerCase('ru-RU');
@@ -133,6 +152,23 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
         }
     };
 
+    const addText = () => {
+        const text = textValue.trim();
+        if (spinning || !text) return;
+
+        const textMovie: TextRouletteMovie = {
+            id: `${Date.now()}-${text}`,
+            title: text,
+            original_title: text,
+            source: 'text',
+            text,
+        };
+
+        setSelectedMovies((current) => [...current, textMovie]);
+        setTextValue('');
+        setWinner(null);
+    };
+
     const removeMovie = (key: string) => {
         if (spinning) return;
         setSelectedMovies((current) => current.filter((movie) => movieKey(movie) !== key));
@@ -144,7 +180,9 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
 
         const index = randomIndex(selectedMovies.length);
         const sectorAngle = 360 / selectedMovies.length;
-        const chosenAngle = index * sectorAngle;
+        const availableAngle = Math.max(0, sectorAngle - wheelDividerAngle - 1);
+        const randomOffset = (randomFraction() - 0.5) * availableAngle;
+        const chosenAngle = index * sectorAngle + randomOffset;
 
         setPendingIndex(index);
         setSpinning(true);
@@ -180,11 +218,11 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
         setModalMovie(null);
     };
 
-    const posterUrl = (movie: RouletteMovie) => movie.source === 'kinopoisk'
+    const posterUrl = (movie: MovieRouletteMovie) => movie.source === 'kinopoisk'
         ? movie.poster_path
         : getTmdbImageUrl('w185', movie.poster_path);
 
-    const openMovieModal = (movie: RouletteMovie) => {
+    const openMovieModal = (movie: MovieRouletteMovie) => {
         setModalMovie(movie);
         dispatch(openModal());
     };
@@ -204,8 +242,9 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                     <div className="roulette-control-group">
                         <span className="roulette-label">Источник фильмов</span>
                         <div className="roulette-segmented">
-                            <button disabled={spinning} className={source === 'excel' ? 'is-active' : ''} onClick={() => setSource('excel')}>Excel</button>
-                            <button disabled={spinning} className={source === 'online' ? 'is-active' : ''} onClick={() => setSource('online')}>TMDB / Kinopoisk</button>
+                            <button disabled={spinning} className={`${source === 'excel' ? 'is-active' : '' } roulette-excel-button`} onClick={() => setSource('excel')}>Excel</button>
+                            <button disabled={spinning} className={`${source === 'online' ? 'is-active' : '' } roulette-tmdb-button`} onClick={() => setSource('online')}>TMDB / Kinopoisk</button>
+                            <button disabled={spinning} className={`${source === 'text' ? 'is-active' : '' } roulette-text-button`} onClick={() => setSource('text')}>Просто текст</button>
                         </div>
                     </div>
 
@@ -249,10 +288,27 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                         />
                     </div>
 
-                    <label className="roulette-label" htmlFor="roulette-search">Поиск по названию</label>
-                    <input id="roulette-search" className="roulette-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Например: Интерстеллар" />
-                    {isSearching && <p className="roulette-hint">Ищем фильм...</p>}
-                    {searchError && <p className="roulette-error">{searchError}</p>}
+                    {source === 'text' ? (
+                        <form className="roulette-text-form" onSubmit={(event) => { event.preventDefault(); addText(); }}>
+                            <label className="roulette-label" htmlFor="roulette-text">Текст участника</label>
+                            <textarea
+                                id="roulette-text"
+                                className="roulette-search roulette-text-input"
+                                value={textValue}
+                                onChange={(event) => setTextValue(event.target.value)}
+                                placeholder="Например: Посмотреть сериал"
+                                rows={3}
+                            />
+                            <button type="submit" className="roulette-login-button">Добавить в колесо</button>
+                        </form>
+                    ) : (
+                        <>
+                            <label className="roulette-label" htmlFor="roulette-search">Поиск по названию</label>
+                            <input id="roulette-search" className="roulette-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Например: Интерстеллар" />
+                            {isSearching && <p className="roulette-hint">Ищем фильм...</p>}
+                            {searchError && <p className="roulette-error">{searchError}</p>}
+                        </>
+                    )}
 
                     <div className="roulette-results">
                         {source === 'excel' && !isAuthorized && (
@@ -266,14 +322,14 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                             return (
                                 <button key={key} className="roulette-result" onClick={() => addMovie(movie)}>
                                     <span className="roulette-result-title">
-                                        {posterUrl(movie) && <img src={posterUrl(movie)} alt="" />}
+                                        {!isTextMovie(movie) && posterUrl(movie) && <img src={posterUrl(movie)} alt="" />}
                                         {movieTitle(movie)}
                                     </span>
                                     <small>{movie.source === 'kinopoisk' ? 'Kinopoisk' : source === 'excel' ? 'Excel' : 'TMDB'}</small>
                                 </button>
                             );
                         })}
-                        {!isSearching && availableMovies.length === 0 && <p className="roulette-hint">Фильмы не найдены</p>}
+                        {source !== 'text' && !isSearching && availableMovies.length === 0 && <p className="roulette-hint">Фильмы не найдены</p>}
                     </div>
                 </section>
 
@@ -309,18 +365,18 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                                                 style={{
                                                     '--poster-angle': `${angle}deg`,
                                                 } as CSSProperties}
-                                                role="button"
-                                                tabIndex={0}
-                                                aria-label={`Открыть описание: ${movieTitle(movie)}`}
-                                                onClick={() => openMovieModal(movie)}
+                                                role={isTextMovie(movie) ? undefined : 'button'}
+                                                tabIndex={isTextMovie(movie) ? undefined : 0}
+                                                aria-label={isTextMovie(movie) ? movieTitle(movie) : `Открыть описание: ${movieTitle(movie)}`}
+                                                onClick={() => { if (!isTextMovie(movie)) openMovieModal(movie); }}
                                                 onKeyDown={(event) => {
-                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                    if (!isTextMovie(movie) && (event.key === 'Enter' || event.key === ' ')) {
                                                         event.preventDefault();
                                                         openMovieModal(movie);
                                                     }
                                                 }}
                                             >
-                                                {posterUrl(movie) ? <img src={posterUrl(movie)} alt={movieTitle(movie)} /> : <span>{movieTitle(movie)}</span>}
+                                                {isTextMovie(movie) ? <span className="roulette-text-slot">{movie.text}</span> : posterUrl(movie) ? <img src={posterUrl(movie)} alt={movieTitle(movie)} /> : <span>{movieTitle(movie)}</span>}
                                             </div>
                                         );
                                     })}
@@ -339,8 +395,8 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                         <aside className="roulette-chips" aria-label="Список выбранных фильмов">
                             <span className="roulette-label">Фильмы в рулетке</span>
                             {lastEliminated && (
-                                <button className="roulette-eliminated" onClick={() => openMovieModal(lastEliminated)}>
-                                    <img src={posterUrl(lastEliminated)} alt="" />
+                                <button className="roulette-eliminated" onClick={() => { if (!isTextMovie(lastEliminated)) openMovieModal(lastEliminated); }}>
+                                    {!isTextMovie(lastEliminated) && <img src={posterUrl(lastEliminated)} alt="" />}
                                     <span>Выбыл: <strong>{movieTitle(lastEliminated)}</strong></span>
                                 </button>
                             )}
@@ -357,7 +413,7 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                     {mode === 'elimination' && selectedMovies.length === 1 && !winner && <p className="roulette-hint">{movieTitle(selectedMovies[0])} последний в списке и становится победителем.</p>}
                 </section>
             </div>
-            {isModalOpen && modalMovie && (
+            {isModalOpen && modalMovie && !isTextMovie(modalMovie) && (
                 <Modal
                     isHidden=""
                     movie_ID={modalMovie.id}

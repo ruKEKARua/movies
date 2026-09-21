@@ -70,12 +70,23 @@ body {
 .roulette-stage { min-height: 38rem; padding: clamp(1.25rem, 4vw, 2.5rem); align-self: start; }
 .roulette-control-group { margin-bottom: 1.25rem; }
 .roulette-label { display: block; margin-bottom: .55rem; color: #b9c1ce; font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
-.roulette-segmented { display: grid; grid-template-columns: 1fr 1fr; gap: .35rem; }
+.roulette-segmented { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: "first second" "third third";
+    gap: .35rem; 
+}
+
+.roulette-excel-button {grid-area: first;}
+.roulette-tmdb-button {grid-area: second;}
+.roulette-text-button {grid-area: third;}
 .roulette-segmented button, .roulette-result, .roulette-chip button { border: 0; font: inherit; cursor: pointer; }
 .roulette-segmented button { min-height: 2.7rem; border-radius: .5rem; background: #252936; color: #b9c1ce; font-size: .82rem; }
 .roulette-segmented button.is-active { background: #f28c28; color: #17202a; font-weight: 800; }
 .roulette-search { width: 100%; min-height: 2.75rem; padding: .65rem .8rem; border: 1px solid rgba(255,255,255,.18); border-radius: .5rem; background: #20232d; color: #fff; font: inherit; }
 .roulette-search:focus-visible, .roulette-segmented button:focus-visible, .roulette-result:focus-visible { outline: 2px solid #61b28a; outline-offset: 2px; }
+.roulette-text-form { display: grid; gap: .55rem; }
+.roulette-text-input { resize: vertical; min-height: 5rem; }
 .roulette-results { display: flex; max-height: 22rem; flex-direction: column; gap: .45rem; overflow-y: auto; margin-top: .85rem; }
 .roulette-result { display: flex; justify-content: space-between; gap: .7rem; padding: .55rem .75rem; border: 1px solid rgba(255,255,255,.08); border-radius: .5rem; background: #20232d; color: #f8fafc; text-align: left; }
 .roulette-result-title { display: flex; min-width: 0; align-items: center; gap: .6rem; }
@@ -110,6 +121,7 @@ body {
 .roulette-poster-slot:focus-visible { outline: 3px solid #61b28a; outline-offset: 4px; }
 .roulette-poster-slot img { display: block; width: 100%; height: 100%; border: 2px solid rgba(255,255,255,.8); border-radius: .7rem; object-fit: cover; box-shadow: 0 .3rem .6rem rgba(0,0,0,.45); }
 .roulette-poster-slot span { display: grid; width: 100%; height: 100%; place-items: center; padding: .25rem; border-radius: .7rem; background: #596170; color: #fff; font-size: .62rem; text-align: center; overflow-wrap: anywhere; }
+.roulette-poster-slot .roulette-text-slot { width: auto; height: auto; min-width: 6rem; max-width: 11rem; min-height: 0; padding: .65rem .8rem; border: 1px solid rgba(255,255,255,.75); border-radius: .35rem; background: #f28c28; color: #17202a; font-size: clamp(.7rem, 1.3vw, 1rem); font-weight: 800; line-height: 1.2; box-shadow: 0 .3rem .6rem rgba(0,0,0,.45); }
 .roulette-wheel-center { position: absolute; top: 50%; left: 50%; display: grid; width: 13%; aspect-ratio: 1; place-items: center; padding: .2rem; border: .1rem solid #f28c28; border-radius: 50%; background: #20232d; color: #fff; cursor: pointer; font: inherit; font-size: clamp(.55rem, 1.2vw, .8rem); font-weight: 900; text-align: center; transform: translate(-50%, -50%); }
 .roulette-wheel-center:hover:not(:disabled) { background: #343946; }
 .roulette-wheel-center:disabled { cursor: not-allowed; opacity: .7; }
