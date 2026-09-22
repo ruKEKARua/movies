@@ -55,6 +55,16 @@ const randomFraction = () => {
     return buffer[0] / 0x100000000;
 };
 
+const getPointerIndexFromRotation = (rotationDegrees: number, movieCount: number) => {
+    if (movieCount <= 0) return 0;
+
+    const normalizedRotation = ((rotationDegrees % 360) + 360) % 360;
+    const sectorAngle = 360 / movieCount;
+    const pointerAngle = (360 - normalizedRotation) % 360;
+
+    return Math.floor(pointerAngle / sectorAngle) % movieCount;
+};
+
 const movieTitle = (movie: RouletteMovie) => movie.title || movie.original_title || 'Без названия';
 
 const movieKey = (movie: RouletteMovie) => `${movie.source}-${movie.id}-${'excelTitle' in movie ? movie.excelTitle ?? '' : ''}`;
@@ -178,28 +188,29 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
     const spin = () => {
         if (!canStart || spinning) return;
 
-        const index = randomIndex(selectedMovies.length);
+        const currentIndex = getPointerIndexFromRotation(rotation, selectedMovies.length);
+        const targetIndex = randomIndex(selectedMovies.length);
         const sectorAngle = 360 / selectedMovies.length;
-        const availableAngle = Math.max(0, sectorAngle - wheelDividerAngle - 1);
-        const randomOffset = (randomFraction() - 0.5) * availableAngle;
-        const chosenAngle = index * sectorAngle + randomOffset;
+        const step = ((targetIndex - currentIndex + selectedMovies.length) % selectedMovies.length) * sectorAngle;
 
-        setPendingIndex(index);
+        setPendingIndex(targetIndex);
         setSpinning(true);
         setLastEliminated(null);
         setWinner(null);
-        setRotation((current) => current + spinTurns * 360 + (360 - chosenAngle));
+        setRotation((current) => current + spinTurns * 360 + step);
     };
 
     const finishSpin = () => {
         if (pendingIndex === null) return;
 
-        const chosenMovie = selectedMovies[pendingIndex];
+        const chosenIndex = getPointerIndexFromRotation(rotation, selectedMovies.length);
+        const chosenMovie = selectedMovies[chosenIndex];
+
         if (mode === 'winner') {
             setWinner(chosenMovie);
         } else {
             setLastEliminated(chosenMovie);
-            const remainingMovies = selectedMovies.filter((_, movieIndex) => movieIndex !== pendingIndex);
+            const remainingMovies = selectedMovies.filter((_, movieIndex) => movieIndex !== chosenIndex);
             setSelectedMovies(remainingMovies);
             if (remainingMovies.length === 1) {
                 setWinner(remainingMovies[0]);
@@ -227,6 +238,52 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
         dispatch(openModal());
     };
 
+
+const STORAGE_KEY = 'user_image_key';
+
+// 1. Инициализация состояния из localStorage (с fallback-значением по умолчанию)
+const [userImage, setUserImage] = useState<string>(() => {
+  return localStorage.getItem(STORAGE_KEY) || 'https://static2.klipy.com/ii/d7aec6f6f171607374b2065c836f92f4/25/92/ydTYzr90.gif';
+});
+
+// 2. Вспомогательная функция для обновления состояния и сохранения в localStorage
+const updateAndSaveImage = (value: string) => {
+  setUserImage(value);
+  try {
+    localStorage.setItem(STORAGE_KEY, value);
+  } catch (error) {
+    console.error('Ошибка сохранения в localStorage:', error);
+  }
+};
+
+// 3. Основная функция обработки файла или текста/URL
+const handleImageChange = (fileOrText: File | string) => {
+  if (!fileOrText) return;
+
+  if (fileOrText instanceof File) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const resultUrl = e.target?.result as string;
+      if (resultUrl) {
+        updateAndSaveImage(resultUrl);
+        console.log('Загружен файл:', fileOrText.name);
+      }
+    };
+    reader.readAsDataURL(fileOrText);
+  } else if (typeof fileOrText === 'string') {
+    updateAndSaveImage(fileOrText);
+    console.log('Введен текст/ссылка:', fileOrText);
+  }
+};
+
+// 4. Обработчик выборки файла из инпута
+const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const file = event.target.files?.[0];
+  if (file) {
+    handleImageChange(file);
+  }
+};
+
     return (
         <main className="roulette-page">
             <header className="roulette-header">
@@ -234,7 +291,19 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                     <p className="roulette-kicker">КИНОКЛУБ / СЛУЧАЙНЫЙ ВЫБОР</p>
                     <h1>Рулетка фильмов</h1>
                 </div>
-                <Button label="Вернуться к каталогу" onClick={onClose} className="roulette-secondary-button" />
+                <div className='gap-10 flex'>
+                    <div className='flex flex-col'>
+                        <label className="border-0 roulette-secondary-button absolute w-75 ">Загрузить картинку</label>
+                        <input 
+                            type="file" 
+                            accept="image/*"
+                            onChange={handleFileSelect}
+                            className="opacity-0 size-full cursor-pointer"
+                            />                    
+                    </div>
+                    <Button label="Вернуться к каталогу" onClick={onClose} className="roulette-secondary-button" />
+                </div>
+
             </header>
 
             <div className="roulette-layout">
@@ -279,7 +348,7 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                             id="roulette-duration"
                             className="roulette-range"
                             type="range"
-                            min="4"
+                            min="1"
                             max="20"
                             step="0.5"
                             value={spinDurationMs / 1000}
@@ -334,13 +403,7 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                 </section>
 
                 <section className="roulette-stage" aria-live="polite">
-                    <div className="roulette-stage-heading">
-                        <div>
-                            <span className="roulette-label">Участники</span>
-                            <h2>{selectedMovies.length} {selectedMovies.length === 1 ? 'фильм' : 'фильмов'} в рулетке</h2>
-                        </div>
-                        <Button label="Очистить" onClick={reset} className="roulette-ghost-button" />
-                    </div>
+                    
 
                     <div className="roulette-board">
                         <div className="roulette-wheel-panel">
@@ -380,19 +443,29 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
                                             </div>
                                         );
                                     })}
-                                    <button
-                                        className="roulette-wheel-center"
-                                        onClick={spin}
-                                        disabled={!canStart || spinning}
-                                        aria-label={mode === 'winner' ? 'Выбрать победителя' : 'Выбрать выбывший фильм'}
-                                    >
-                                        {winner ? 'ПОБЕДИТЕЛЬ' : lastEliminated ? 'ЕЩЁ РАЗ' : spinning ? 'КРУТИМ' : 'КРУТИТЬ'}
-                                    </button>
+                                    
+                                        
                                 </div>
+                                <div className={`${/*bg-[url('${userImage}')]*/''} 
+                                        roulette-wheel-center overflow-hidden`} 
+                                        onClick={spin} 
+                                        aria-label={mode === 'winner' ? 'Выбрать победителя' : 'Выбрать выбывший фильм'}
+                                        >
+
+                                            <img src={userImage} alt="" className='size-full object-cover absolute'  />
+
+                                    </div>
                             </div>
                         </div>
 
                         <aside className="roulette-chips" aria-label="Список выбранных фильмов">
+                            <div className="roulette-stage-heading">
+                                <div>
+                                    <span className="roulette-label">Участники</span>
+                                    <h3>{selectedMovies.length} {selectedMovies.length === 1 ? 'фильм' : 'фильмов'} в рулетке</h3>
+                                </div>
+                                <Button label="Очистить" onClick={reset} className="roulette-ghost-button" />
+                            </div>
                             <span className="roulette-label">Фильмы в рулетке</span>
                             {lastEliminated && (
                                 <button className="roulette-eliminated" onClick={() => { if (!isTextMovie(lastEliminated)) openMovieModal(lastEliminated); }}>

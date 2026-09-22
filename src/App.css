@@ -64,8 +64,8 @@ body {
 .roulette-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
 .roulette-kicker { color: #f28c28; font-size: .75rem; font-weight: 800; letter-spacing: .12em; }
 .roulette-header h1 { margin: .35rem 0 0; color: #f8fafc; font-size: clamp(1.33rem, 3.33vw, 3rem); line-height: 1; }
-.roulette-layout { display: grid; grid-template-columns: minmax(16rem, 20rem) minmax(0, 1fr); gap: clamp(1rem, 2vw, 2rem); align-items: start; }
-.roulette-controls, .roulette-stage { border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; background: rgba(27,29,37,.86); box-shadow: 0 1.5rem 3rem rgba(0,0,0,.2); }
+.roulette-layout { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: clamp(1rem, 2vw, 2rem); align-items: start; }
+.roulette-controls, .roulette-stage { min-width: 0; border: 1px solid rgba(255,255,255,.14); border-radius: 1rem; background: rgba(27,29,37,.86); box-shadow: 0 1.5rem 3rem rgba(0,0,0,.2); }
 .roulette-controls { padding: 1.25rem; }
 .roulette-stage { min-height: 38rem; padding: clamp(1.25rem, 4vw, 2.5rem); align-self: start; }
 .roulette-control-group { margin-bottom: 1.25rem; }
@@ -98,12 +98,12 @@ body {
 .roulette-error { color: #ff9c8e; }
 .roulette-login-notice { display: flex; align-items: center; justify-content: space-between; gap: .65rem; padding: .75rem; border: 1px solid rgba(242,140,40,.45); border-radius: .5rem; background: rgba(242,140,40,.12); color: #ffc078; font-size: .82rem; line-height: 1.35; }
 .roulette-login-button { flex: 0 0 auto; border-radius: .4rem; background: #f28c28; color: #17202a; padding: .5rem .65rem; font-size: .75rem; font-weight: 800; }
-.roulette-stage-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.roulette-stage-heading { display: flex; justify-content: space-evenly; gap: 1rem; align-items: center; margin-bottom: 30px;}
 .roulette-stage h2 { margin: 0; color: #f8fafc; font-size: clamp(1.4rem, 3vw, 2.1rem); }
 .roulette-ghost-button, .roulette-secondary-button { border: 1px solid rgba(255,255,255,.18); border-radius: .5rem; background: transparent; color: #f8fafc; padding: .6rem .8rem; }
-.roulette-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(20rem, 26rem); gap: clamp(1rem, 2vw, 2rem); align-items: start; margin-top: 1.5rem; }
-.roulette-wheel-panel { display: flex; min-width: 0; justify-content: center; }
-.roulette-chips { display: flex; min-height: 10rem; max-height: 38rem; flex-direction: column; gap: .55rem; overflow-y: auto; padding: 1rem; border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; background: rgba(20,22,28,.55); }
+.roulette-board { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: clamp(1rem, 2vw, 2rem); align-items: start; margin-top: 1.5rem; }
+.roulette-wheel-panel { display: flex; min-width: 0; justify-content: center; overflow: hidden;}
+.roulette-chips { display: flex; min-width: 0; min-height: 10rem; max-height: 38rem; flex-direction: column; gap: .55rem; overflow-y: auto; padding: 1rem; border: 1px solid rgba(255,255,255,.1); border-radius: .75rem; background: rgba(20,22,28,.55); }
 .roulette-chip { display: flex; align-items: center; gap: .6rem; max-width: 100%; min-height: 2.65rem; padding: .45rem .65rem .45rem .45rem; border-radius: .45rem; background: #323743; color: #f8fafc; }
 .roulette-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .roulette-chip button { display: grid; width: 1.7rem; height: 1.7rem; flex: 0 0 auto; place-items: center; border: 0; border-radius: 50%; background: #596170; color: #fff; cursor: pointer; font-size: 1rem; line-height: 1; }
@@ -113,17 +113,17 @@ body {
 .roulette-eliminated img { width: 2.5rem; height: 3.75rem; flex: 0 0 auto; border-radius: .3rem; object-fit: cover; }
 .roulette-eliminated strong { color: #f28c28; }
 .roulette-empty { color: #8d97a7; }
-.roulette-wheel-wrap { overflow: hidden; --wheel-size: min(100%, 52rem); position: relative; display: grid; width: var(--wheel-size); min-height: var(--wheel-size); place-items: center; margin: 1rem auto; }
-.roulette-pointer { position: absolute; top: calc(50% - var(--wheel-size) / 2 - .35rem); left: 50%; z-index: 4; width: 0; height: 0; border-right: .9rem solid transparent; border-left: .9rem solid transparent; border-top: 1.8rem solid #f28c28; filter: drop-shadow(0 .2rem .15rem rgba(0,0,0,.5)); transform: translateX(-50%); }
-.roulette-wheel { position: relative; width: var(--wheel-size); aspect-ratio: 1; overflow: hidden; border: .05rem solid #f28c28; border-radius: 50%; background: #343946; box-shadow: 0 1.5rem 2.5rem rgba(0,0,0,.35), inset 0 0 0 .35rem #171920, inset 0 0 2rem rgba(0,0,0,.4); transition: transform 5.2s cubic-bezier(.12,.78,.18,1); }
+.roulette-wheel-wrap { --wheel-size: min(100%, 52rem); position: relative; display: grid; width: var(--wheel-size); aspect-ratio: 1; place-items: center; margin: 1rem auto; }
+.roulette-pointer { position: absolute; top: -.35rem; left: 50%; z-index: 4; width: 0; height: 0; border-right: clamp(.55rem, 2.5vw, .9rem) solid transparent; border-left: clamp(.55rem, 2.5vw, .9rem) solid transparent; border-top: clamp(1.1rem, 5vw, 1.8rem) solid #f28c28; filter: drop-shadow(0 .2rem .15rem rgba(0,0,0,.5)); transform: translateX(-50%); }
+.roulette-wheel { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; border: .05rem solid #f28c28; border-radius: 50%; background: #343946; box-shadow: 0px 0px 32px 12px rgba(0,0,0,.35), inset 0 0 0 .35rem #171920, inset 0 0 2rem rgba(0,0,0,.4); transition: transform 5.2s cubic-bezier(.12,.78,.18,1); }
 .roulette-wheel.is-spinning { transition-timing-function: cubic-bezier(.12,.78,.18,1); }
-.roulette-poster-slot { --poster-distance: clamp(-19rem, -22vw, -9rem); position: absolute; top: 50%; left: 50%; width: clamp(4.5rem, 8vw, 8rem); height: clamp(6.75rem, 12vw, 12rem); margin: calc(clamp(6.75rem, 12vw, 12rem) / -2) 0 0 calc(clamp(4.5rem, 8vw, 8rem) / -2); cursor: pointer; transform: rotate(var(--poster-angle)) translateY(var(--poster-distance)); }
+.roulette-poster-slot { --poster-width: clamp(3.5rem, 18%, 18rem); --poster-height: calc(var(--poster-width) * 1.4); --poster-distance: calc(var(--wheel-size) * -1.4); position: absolute; top: 50%; left: 50%; width: var(--poster-width); height: var(--poster-height); margin: calc(var(--poster-height) / -2) 0 0 calc(var(--poster-width) / -2); cursor: pointer; transform: rotate(var(--poster-angle)) translateY(var(--poster-distance)); }
 .roulette-poster-slot:focus-visible { outline: 3px solid #61b28a; outline-offset: 4px; }
 .roulette-poster-slot img { display: block; width: 100%; height: 100%; border: 2px solid rgba(255,255,255,.8); border-radius: .7rem; object-fit: cover; box-shadow: 0 .3rem .6rem rgba(0,0,0,.45); }
 .roulette-poster-slot span { display: grid; width: 100%; height: 100%; place-items: center; padding: .25rem; border-radius: .7rem; background: #596170; color: #fff; font-size: .62rem; text-align: center; overflow-wrap: anywhere; }
 .roulette-poster-slot .roulette-text-slot { width: auto; height: auto; min-width: 6rem; max-width: 11rem; min-height: 0; padding: .65rem .8rem; border: 1px solid rgba(255,255,255,.75); border-radius: .35rem; background: #f28c28; color: #17202a; font-size: clamp(.7rem, 1.3vw, 1rem); font-weight: 800; line-height: 1.2; box-shadow: 0 .3rem .6rem rgba(0,0,0,.45); }
-.roulette-wheel-center { position: absolute; top: 50%; left: 50%; display: grid; width: 13%; aspect-ratio: 1; place-items: center; padding: .2rem; border: .1rem solid #f28c28; border-radius: 50%; background: #20232d; color: #fff; cursor: pointer; font: inherit; font-size: clamp(.55rem, 1.2vw, .8rem); font-weight: 900; text-align: center; transform: translate(-50%, -50%); }
-.roulette-wheel-center:hover:not(:disabled) { background: #343946; }
+.roulette-wheel-center { position: absolute; top: 50%; left: 50%; display: grid; width: 35%; aspect-ratio: 1; place-items: center; padding: .2rem; border: .1rem solid #f28c28; border-radius: 50%; color: #fff; cursor: pointer; font: inherit; font-size: clamp(.55rem, 1.2vw, .8rem); font-weight: 900; text-align: center; transform: translate(-50%, -50%); background-repeat: no-repeat; background-size: cover;}
+.roulette-wheel-center:hover:not(:disabled) { opacity: 75%;}
 .roulette-wheel-center:disabled { cursor: not-allowed; opacity: .7; }
 .roulette-segmented button:disabled { opacity: .5; cursor: not-allowed; }
 .roulette-strength-controls { display: grid; gap: .45rem; }
