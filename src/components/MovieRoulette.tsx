@@ -49,11 +49,11 @@ const randomIndex = (length: number) => {
     return buffer[0] % length;
 };
 
-const randomFraction = () => {
-    const buffer = new Uint32Array(1);
-    crypto.getRandomValues(buffer);
-    return buffer[0] / 0x100000000;
-};
+// const randomFraction = () => {
+//     const buffer = new Uint32Array(1);
+//     crypto.getRandomValues(buffer);
+//     return buffer[0] / 0x100000000;
+// };
 
 const getPointerIndexFromRotation = (rotationDegrees: number, movieCount: number) => {
     if (movieCount <= 0) return 0;
