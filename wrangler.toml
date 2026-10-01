@@ -3,13 +3,6 @@ name = "movies"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-10-01"
 
-[observability]
-enabled = true
-
-[observability.logs]
-invocation_logs = true
-head_sampling_rate = 1
-
 [vars]
 GOOGLE_CLIENT_ID = "456996201218-olrdps98q9g3376qi35vudmo7u7iu1hn.apps.googleusercontent.com"
 VITE_TMDB_PROXY_URL = "https://movies-tmdb-proxy.kekar.workers.dev/tmdb"
