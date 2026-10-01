@@ -95,11 +95,12 @@ export async function getGoogleUser(accessToken: string) {
 }
 
 export async function getStoredSession(request: Request, env: AuthEnv) {
-  const { sessions } = getOAuthConfig(env);
   const sessionId = getCookie(request, sessionCookieName);
   if (!sessionId || !/^[a-f0-9]{64}$/.test(sessionId)) {
     return null;
   }
+
+  const { sessions } = getOAuthConfig(env);
 
   const value = await sessions.get(sessionId);
   if (!value) {
