@@ -5,8 +5,13 @@ const allowedOrigins = new Set([
 const tmdbApiUrl = "https://api.themoviedb.org/3";
 const tmdbImageUrl = "https://image.tmdb.org/t/p";
 
-function corsHeaders(origin: string | null): HeadersInit {
-  const responseOrigin = origin && allowedOrigins.has(origin)
+type WorkerEnv = {
+  TMDB_TOKEN: string;
+  PAGES_ORIGIN?: string;
+};
+
+function corsHeaders(origin: string | null, pagesOrigin?: string): HeadersInit {
+  const responseOrigin = origin && (allowedOrigins.has(origin) || origin === pagesOrigin)
     ? origin
     : "https://rukekarua.github.io";
 
@@ -19,9 +24,9 @@ function corsHeaders(origin: string | null): HeadersInit {
 }
 
 export default {
-  async fetch(request: Request, env: { TMDB_TOKEN: string }): Promise<Response> {
+  async fetch(request: Request, env: WorkerEnv): Promise<Response> {
     const origin = request.headers.get("Origin");
-    const headers = corsHeaders(origin);
+    const headers = corsHeaders(origin, env.PAGES_ORIGIN);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { status: 204, headers });

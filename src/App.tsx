@@ -93,7 +93,7 @@ function App() {
         })
         : foundMovies;
 
-    const { login, isAuthorized, isLoading, userName, userPicture, usersRating, participantNames, saveMovie } = useGetMovies();
+    const { login, logout, isAuthorized, isLoading, userName, userPicture, authError, usersRating, participantNames, saveMovie } = useGetMovies();
     const areMoviesLoaded = useSetArrayOfSearchedMovies(moviesFromExcel);
 
     const sortedFoundMovies = sortMovies(foundMovies, sortOrder, usersRating);
@@ -159,7 +159,10 @@ function App() {
         <>
             <div className='auth-panel bg-sky-700 z-10 rounded-br-full absolute'>
                 {!isAuthorized ? (
-                    <Button className='text-amber-50' onClick={login} label='Авторизоваться с помощью Google' />
+                    <div>
+                        <Button className='text-amber-50' onClick={login} label='Авторизоваться с помощью Google' />
+                        {authError && <p role='alert' className='max-w-xs px-4 pb-2 text-xs text-red-100'>{authError}</p>}
+                    </div>
                 ) : (
                     <div className='flex items-center gap-2 text-amber-50 px-4 py-2'>
                         {userPicture && (
@@ -177,6 +180,7 @@ function App() {
                                 </>
                             ) : 'Вы вошли в аккаунт Google'}
                         </p>
+                        <Button className='text-amber-50' onClick={() => void logout()} label='Выйти' />
                     </div>
                 )}
             </div>

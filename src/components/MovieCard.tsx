@@ -10,7 +10,7 @@ type MovieCardProps = {
 
 const MovieCard = ({id=0, title = '', posterPath = '', overallRating, func}: MovieCardProps) => {
   return (
-    <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={id} >
+    <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center bg-slate-800/85 rounded-2xl" key={id} >
 
         <div className="movie-title-container">
             <p className="movie-title text-white">

@@ -83,7 +83,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                 <SearchBar/> <br></br>
             </div>         */}
                 <div className="movie-slider-frame relative rounded-3xl shadow-[inset-20] select-auto page-enter">
-                    <div className="movie-grid rounded-3xl bg-gray-600/10">
+                    <div className="movie-grid rounded-3xl bg-gray-600/0">
 
                         {
                             media.map((media, key) => {

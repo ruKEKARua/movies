@@ -49,20 +49,10 @@ const randomIndex = (length: number) => {
     return buffer[0] % length;
 };
 
-// const randomFraction = () => {
-//     const buffer = new Uint32Array(1);
-//     crypto.getRandomValues(buffer);
-//     return buffer[0] / 0x100000000;
-// };
-
-const getPointerIndexFromRotation = (rotationDegrees: number, movieCount: number) => {
-    if (movieCount <= 0) return 0;
-
-    const normalizedRotation = ((rotationDegrees % 360) + 360) % 360;
-    const sectorAngle = 360 / movieCount;
-    const pointerAngle = (360 - normalizedRotation) % 360;
-
-    return Math.floor(pointerAngle / sectorAngle) % movieCount;
+const randomFraction = () => {
+    const buffer = new Uint32Array(1);
+    crypto.getRandomValues(buffer);
+    return buffer[0] / 0x100000000;
 };
 
 const movieTitle = (movie: RouletteMovie) => movie.title || movie.original_title || 'Без названия';
@@ -188,29 +178,33 @@ const MovieRoulette = ({ excelMovies, isAuthorized, login, ratings, onClose }: M
     const spin = () => {
         if (!canStart || spinning) return;
 
-        const currentIndex = getPointerIndexFromRotation(rotation, selectedMovies.length);
-        const targetIndex = randomIndex(selectedMovies.length);
+        const index = randomIndex(selectedMovies.length);
         const sectorAngle = 360 / selectedMovies.length;
-        const step = ((targetIndex - currentIndex + selectedMovies.length) % selectedMovies.length) * sectorAngle;
+        const availableAngle = Math.max(0, sectorAngle - wheelDividerAngle - 1);
+        const randomOffset = (randomFraction() - 0.5) * availableAngle;
+        const chosenAngle = index * sectorAngle + randomOffset;
+        const targetAngle = ((360 - chosenAngle) % 360 + 360) % 360;
 
-        setPendingIndex(targetIndex);
+        setPendingIndex(index);
         setSpinning(true);
         setLastEliminated(null);
         setWinner(null);
-        setRotation((current) => current + spinTurns * 360 + step);
+        setRotation((current) => {
+            const currentAngle = ((current % 360) + 360) % 360;
+            const rotationToTarget = (targetAngle - currentAngle + 360) % 360;
+            return current + spinTurns * 360 + rotationToTarget;
+        });
     };
 
     const finishSpin = () => {
         if (pendingIndex === null) return;
 
-        const chosenIndex = getPointerIndexFromRotation(rotation, selectedMovies.length);
-        const chosenMovie = selectedMovies[chosenIndex];
-
+        const chosenMovie = selectedMovies[pendingIndex];
         if (mode === 'winner') {
             setWinner(chosenMovie);
         } else {
             setLastEliminated(chosenMovie);
-            const remainingMovies = selectedMovies.filter((_, movieIndex) => movieIndex !== chosenIndex);
+            const remainingMovies = selectedMovies.filter((_, movieIndex) => movieIndex !== pendingIndex);
             setSelectedMovies(remainingMovies);
             if (remainingMovies.length === 1) {
                 setWinner(remainingMovies[0]);

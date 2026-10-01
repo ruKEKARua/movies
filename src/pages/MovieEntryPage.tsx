@@ -217,6 +217,7 @@ const MovieEntryPage = ({ participantNames, onSave }: MovieEntryPageProps) => {
       .filter(Boolean),
   );
 
+
   return (
     <div className="movie-entry-page w-full max-w-6xl mx-auto p-5 text-white">
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -229,18 +230,29 @@ const MovieEntryPage = ({ participantNames, onSave }: MovieEntryPageProps) => {
       <form onSubmit={handleSubmit} className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="rounded-2xl border border-sky-500/40 bg-slate-900/75 p-5 shadow-2xl shadow-sky-950/20 backdrop-blur-sm">
           <div className="grid gap-4 md:grid-cols-2">
-            <label className="flex flex-col gap-2 text-left text-sm text-slate-200">
+            <label className="flex flex-col gap-2 text-left text-sm text-slate-200 md:col-span-2">
               <span>Дата</span>
-              <input
-                type="date"
-                value={form.date}
-                onChange={(event) => {
-                  setForm((current) => ({ ...current, date: event.target.value }));
-                  setErrors((current) => ({ ...current, date: undefined }));
-                }}
-                className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-sky-400"
-              />
-              {errors.date && <span className="text-xs text-red-400">{errors.date}</span>}
+              <div className='flex flex-row gap-2 text-left text-sm text-slate-200'>
+                <input
+                    type="date"
+                    value={form.date}
+                    onChange={(event) => {
+                        setForm((current) => ({ ...current, date: event.target.value }));
+                        setErrors((current) => ({ ...current, date: undefined }));
+                    }}
+                    className="w-35 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-white outline-none transition focus:border-sky-400"
+                />
+                <button onClick={() => {
+                    
+                    setForm((current) => ({ ...current, date: new Date().toLocaleDateString('sv-SE') }));
+
+                }} type='button'
+                className='w-60 rounded-xl border border-slate-700 bg-slate-950 text-white outline-none transition focus:border-sky-400'>
+                    Установить сегодняшнюю дату
+                </button>
+                    
+                {errors.date && <span className="text-xs text-red-400">{errors.date}</span>}
+              </div>
             </label>
 
             <label className="flex flex-col gap-2 text-left text-sm text-slate-200 md:col-span-2">
@@ -266,7 +278,7 @@ const MovieEntryPage = ({ participantNames, onSave }: MovieEntryPageProps) => {
                   onClick={addParticipantRow}
                   className="rounded-lg border border-sky-500/60 bg-sky-500/10 px-2.5 py-1.5 text-xs font-medium text-sky-200 transition hover:bg-sky-500/20"
                 >
-                  + добавить
+                  Добавить участника
                 </button>
               </div>
 
