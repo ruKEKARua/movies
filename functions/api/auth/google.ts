@@ -9,6 +9,14 @@ import {
 
 export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
   try {
+    console.log('DEBUG google auth start', {
+      hasClientId: Boolean(env.GOOGLE_CLIENT_ID),
+      hasClientSecret: Boolean(env.GOOGLE_CLIENT_SECRET),
+      hasAuthSessions: Boolean(env.AUTH_SESSIONS),
+      url: request.url,
+      hostname: new URL(request.url).hostname,
+    });
+
     const { clientId } = getOAuthConfig(env as AuthEnv);
     const state = createRandomValue();
     const callbackUrl = new URL('/api/auth/callback', request.url).toString();
@@ -34,6 +42,14 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
     });
   } catch (error) {
     console.error('Не удалось начать вход Google:', error);
+    console.log('DEBUG google auth failure', {
+      hasClientId: Boolean(env.GOOGLE_CLIENT_ID),
+      hasClientSecret: Boolean(env.GOOGLE_CLIENT_SECRET),
+      hasAuthSessions: Boolean(env.AUTH_SESSIONS),
+      errorMessage: error instanceof Error ? error.message : String(error),
+      url: request.url,
+      hostname: new URL(request.url).hostname,
+    });
     return Response.redirect(new URL('/?auth_error=google_oauth', request.url), 302);
   }
 };
