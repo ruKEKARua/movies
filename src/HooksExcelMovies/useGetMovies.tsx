@@ -183,11 +183,16 @@ const useGetMovies = () => {
     const [userName, setUserName] = useState('');
     const [userPicture, setUserPicture] = useState('');
     const [accessToken, setAccessToken] = useState('');
-    const [authError, setAuthError] = useState(() =>
-        typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('auth_error')
-            ? 'Не удалось войти в Google. Проверьте настройки OAuth и попробуйте снова.'
-            : '',
-    );
+    const [authError, setAuthError] = useState(() => {
+        if (typeof window === 'undefined') {
+            return '';
+        }
+
+        const error = new URLSearchParams(window.location.search).get('auth_error');
+        return error
+            ? `Не удалось войти в Google (${error}). Проверьте настройки OAuth и попробуйте снова.`
+            : '';
+    });
 
     const browserLogin = useGoogleLogin({
         scope: 'openid profile email https://www.googleapis.com/auth/spreadsheets',

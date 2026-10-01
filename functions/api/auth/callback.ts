@@ -20,8 +20,14 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
   const expectedState = getCookie(request, stateCookieName);
   const code = url.searchParams.get('code');
 
-  if (!state || !expectedState || state !== expectedState || !code || url.searchParams.has('error')) {
-    const response = redirectWithAuthError(request);
+  if (url.searchParams.has('error')) {
+    const response = redirectWithAuthError(request, url.searchParams.get('error') ?? 'google_oauth');
+    response.headers.append('Set-Cookie', expiredCookie(stateCookieName));
+    return response;
+  }
+
+  if (!state || !expectedState || state !== expectedState || !code) {
+    const response = redirectWithAuthError(request, 'invalid_state');
     response.headers.append('Set-Cookie', expiredCookie(stateCookieName));
     return response;
   }
@@ -59,7 +65,12 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
     return new Response(null, { status: 302, headers });
   } catch (error) {
     console.error('Не удалось завершить вход Google:', error);
-    const response = redirectWithAuthError(request);
+    const reason = error instanceof Error && error.message === 'Google OAuth is not configured'
+      ? 'oauth_not_configured'
+      : error instanceof Error && error.message.includes('Google did not return a refresh token')
+        ? 'no_refresh_token'
+        : 'token_exchange_failed';
+    const response = redirectWithAuthError(request, reason);
     response.headers.append('Set-Cookie', expiredCookie(stateCookieName));
     return response;
   }

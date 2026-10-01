@@ -49,10 +49,11 @@ export const createRandomValue = (byteLength = 32) => {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
 };
 
-export const redirectWithAuthError = (request: Request) => Response.redirect(
-  new URL('/?auth_error=google_oauth', request.url),
-  302,
-);
+export const redirectWithAuthError = (request: Request, reason = 'google_oauth') => {
+  const errorUrl = new URL('/', request.url);
+  errorUrl.searchParams.set('auth_error', reason);
+  return Response.redirect(errorUrl, 302);
+};
 
 export const getOAuthConfig = (env: AuthEnv) => {
   if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET || !env.AUTH_SESSIONS) {
