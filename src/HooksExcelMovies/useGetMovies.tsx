@@ -39,8 +39,9 @@ type CloudflareSessionResponse = {
     participants: string[];
 };
 
-const isCloudflarePages = typeof window !== 'undefined'
-    && window.location.hostname.endsWith('.pages.dev');
+const isServerAuthEnabled = typeof window !== 'undefined'
+    && window.location.protocol === 'https:'
+    && !['localhost', '127.0.0.1'].includes(window.location.hostname);
 const spreadsheetId = '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8';
 
 const normalizeMovieData = (
@@ -178,7 +179,7 @@ const useGetMovies = () => {
     const [usersRating, setUsersRating] = useState<MovieRatings[]>([]);
     const [participantNames, setParticipantNames] = useState<string[]>([]);
     const [isAuthorized, setIsAuthorized] = useState(false);
-    const [isLoading, setIsLoading] = useState(isCloudflarePages);
+    const [isLoading, setIsLoading] = useState(isServerAuthEnabled);
     const [userName, setUserName] = useState('');
     const [userPicture, setUserPicture] = useState('');
     const [accessToken, setAccessToken] = useState('');
@@ -226,7 +227,7 @@ const useGetMovies = () => {
 
     const login = () => {
         setAuthError('');
-        if (isCloudflarePages) {
+        if (isServerAuthEnabled) {
             window.location.assign('/api/auth/google');
             return;
         }
@@ -235,7 +236,7 @@ const useGetMovies = () => {
     };
 
     const logout = async () => {
-        if (isCloudflarePages) {
+        if (isServerAuthEnabled) {
             await fetch('/api/logout', {
                 method: 'POST',
                 credentials: 'same-origin',
@@ -253,7 +254,7 @@ const useGetMovies = () => {
     };
 
     useEffect(() => {
-        if (!isCloudflarePages) {
+        if (!isServerAuthEnabled) {
             return;
         }
 
@@ -288,7 +289,7 @@ const useGetMovies = () => {
     }, []);
 
     const saveMovie = async (entry: MovieSheetEntry) => {
-        if (isCloudflarePages) {
+        if (isServerAuthEnabled) {
             const response = await fetch('/api/save-movie', {
                 method: 'POST',
                 credentials: 'same-origin',
