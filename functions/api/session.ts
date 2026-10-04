@@ -75,7 +75,10 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
     const accessToken = await refreshGoogleAccessToken(stored.session.refreshToken, env as AuthEnv);
     const [moviesResponse, movieComments, ratingsResponse, participantsResponse] = await Promise.all([
       fetchRange(accessToken, 'Киноклуб!C5:C'),
-      fetchMovieComments(accessToken),
+      fetchMovieComments(accessToken).catch((error: unknown) => {
+        console.error('Не удалось загрузить комментарии Google Sheets:', error);
+        return [];
+      }),
       fetchRange(accessToken, 'Киноклуб!B5:F', 'ROWS'),
       fetchRange(accessToken, 'Сводная киноклуба!B3:B50'),
     ]);
