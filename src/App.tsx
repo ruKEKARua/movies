@@ -20,7 +20,7 @@ import MovieRoulette from './components/MovieRoulette';
 
 
 type PageMode = 'main' | 'entry' | 'roulette';
-type SortOrder = 'added' | 'top-rated' | 'low-rated' | 'alphabetical';
+type SortOrder = 'added' | 'reverse' | 'top-rated' | 'low-rated' | 'alphabetical';
 
 type SortableMedia = {
     title?: string;
@@ -42,6 +42,10 @@ const getRating = (movie: SortableMedia, ratings: MovieRatings[]) => {
 };
 
 const sortMovies = <T extends SortableMedia>(movies: T[], sortOrder: SortOrder, ratings: MovieRatings[]) => {
+    if (sortOrder === 'reverse') {
+        return [...movies].reverse();
+    }
+
     if (sortOrder === 'added') {
         return movies;
     }
@@ -73,12 +77,14 @@ function App() {
     const [page, setPage] = useState<PageMode>('main');
     const [isAddMovieRequested, setIsAddMovieRequested] = useState(false);
     const [sortOrder, setSortOrder] = useState<SortOrder>('added');
+    const [searchAllMovies, setSearchAllMovies] = useState(false);
+    const [highlightMovieTitle, setHighlightMovieTitle] = useState<string | null>(null);
 
     const searchBarValue = useSelector((state: RootState) => state.searchBarValue.value);
     const moviesFromExcel = useSelector((state: RootState) => state.setExcelMovies.value)
     const foundMovies = useSelector((state: RootState) => state.foundMovies.value);
     
-    const searchValueArray = useSearchMovie(searchBarValue);
+    const searchValueArray = useSearchMovie(searchBarValue, searchAllMovies);
 
     const normalizedSearchValue = searchBarValue.trim().toLowerCase();
     const filteredSliderMovies = normalizedSearchValue
@@ -101,10 +107,31 @@ function App() {
     const sortedSearchMovies = sortMovies(searchValueArray?.results ?? [], sortOrder, usersRating);
     const displayedMovies = searchBarValue.trim() === ''
         ? sortedFoundMovies
-        : sortedFilteredMovies.length > 0
-            ? sortedFilteredMovies
-            : sortedSearchMovies;
+        : searchAllMovies
+            ? sortedSearchMovies
+            : sortedFilteredMovies;
     const isCatalogLoading = isLoading || !areMoviesLoaded;
+
+    
+
+    useEffect(() => {
+        if (page !== 'main' || !highlightMovieTitle || isCatalogLoading) {
+            return;
+        }
+
+        const matchingMovie = foundMovies.some((movie) =>
+            movie.media_type !== 'person'
+            && movie.excelTitle?.trim().toLocaleLowerCase('ru-RU')
+                === highlightMovieTitle.trim().toLocaleLowerCase('ru-RU'),
+        );
+
+        if (!matchingMovie) {
+            return;
+        }
+
+        const timeoutId = window.setTimeout(() => setHighlightMovieTitle(null), 3500);
+        return () => window.clearTimeout(timeoutId);
+    }, [foundMovies, highlightMovieTitle, isCatalogLoading, page]);
 
     const randomNumber = (min:number, max:number) => {
 
@@ -125,10 +152,10 @@ function App() {
     useEffect(() => {
 
         //console.log('moviesArray = ', moviesArray)
-        console.log('searchBar = ', searchValueArray)
-        console.log('Кино с экселя = ', moviesFromExcel)
-        console.log('Тест = ', foundMovies)
-        console.log('Оценили: ', usersRating);
+        // console.log('searchBar = ', searchValueArray)
+        // console.log('Кино с экселя = ', moviesFromExcel)
+        // console.log('Тест = ', foundMovies)
+        // console.log('Оценили: ', usersRating);
 
     }, [foundMovies, moviesFromExcel, searchValueArray, usersRating])
 
@@ -140,7 +167,7 @@ function App() {
     if (page === 'entry' || (isAddMovieRequested && isAuthorized)) {
         return (
             <div className='app-entry-screen min-h-screen bg-slate-950 text-white'>
-                <div className='flex justify-end p-4'>
+                <div className='flex justify-end pt-5'>
                     <Button
                         className='rounded-xl bg-slate-800 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700'
                         onClick={() => {
@@ -150,7 +177,17 @@ function App() {
                         label='Вернуться к каталогу'
                     />
                 </div>
-                <MovieEntryPage participantNames={participantNames} onSave={saveMovie} />
+                <MovieEntryPage
+                    participantNames={participantNames}
+                    onSave={saveMovie}
+                    onSaveSuccess={(title) => {
+                        setHighlightMovieTitle(title);
+                        dispatch(setSearchBarValue(''));
+                        setSearchAllMovies(false);
+                        setPage('main');
+                        setIsAddMovieRequested(false);
+                    }}
+                />
             </div>
         );
     }
@@ -226,13 +263,25 @@ function App() {
 
             <header className='app-header'>
                 <div className='search-section text-center justify-center items-center'>
-                    <h2>Поиск по названию или имени</h2>
-                    <div className='w-full'>
-                        <input type="search" name="search" id="search" aria-label="Поиск по названию или имени" onChange={(event) => {
+                    <h2>Поиск по названию</h2>
+                    <div className='search-control-row'>
+                        <input type="search" name="search" id="search" aria-label="Поиск по названию" onChange={(event) => {
                             dispatch(setSearchBarValue(event.target.value))
                         }} className="search-input m-auto
-                            flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200
-                            hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-blue-300 active:scale-95" />
+                            flex items-center gap-2 rounded-full bg-blue-600 px-5 py-2.5 text-sm font-medium text-white 
+                            shadow-sm transition-all duration-200
+                            hover:bg-blue-700 hover:shadow-md focus:outline-none focus:ring-4
+                            focus:ring-blue-300 active:scale-98" />
+                        <label className='search-all-label' htmlFor='search-all-movies'>
+                            <input
+                                id='search-all-movies'
+                                className='rounded-2xl'
+                                type='checkbox'
+                                checked={searchAllMovies}
+                                onChange={(event) => setSearchAllMovies(event.target.checked)}
+                            />
+                            Вся база
+                        </label>
                     </div>
                 </div>
             </header>
@@ -258,6 +307,7 @@ function App() {
                                 onChange={(event) => setSortOrder(event.target.value as SortOrder)}
                             >
                                 <option value='added'>По порядку добавления</option>
+                                <option value='reverse'>С конца</option>
                                 <option value='top-rated'>Сначала топовые</option>
                                 <option value='low-rated'>Сначала худшие</option>
                                 <option value='alphabetical'>По алфавиту</option>
@@ -265,11 +315,14 @@ function App() {
                         </aside>
                     )}
 
-                    <div className='movie-slider-container'>
+                    <div className='movie-slider-container '>
                         {
-                            searchBarValue.trim() === '' ? <MovieSlider media={sortedFoundMovies} ratings={usersRating} isLoading={isCatalogLoading}/>
-                            : sortedFilteredMovies.length > 0 ? <MovieSlider media={sortedFilteredMovies} ratings={usersRating} isLoading={isCatalogLoading}/>
-                            : <MovieSlider media={sortedSearchMovies} ratings={usersRating} isLoading={isCatalogLoading} />
+                            <MovieSlider
+                                media={displayedMovies}
+                                ratings={usersRating}
+                                isLoading={isCatalogLoading}
+                                highlightMovieTitle={highlightMovieTitle}
+                            />
                         }
                     </div>
                 </div>

@@ -21,12 +21,16 @@ type ImagesConfig = {
 
 }
 
-const useGetConfiguration = () => {
+const useGetConfiguration = (enabled = true) => {
 
     const [data, setData] = useState<ConfigAPI | null>(null);
     const [error, setError] = useState<Error | null>(null);
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
+
         detectMovieSource().then((source) => source === 'kinopoisk'
             ? {
                 change_keys: [],
@@ -50,7 +54,7 @@ const useGetConfiguration = () => {
             });
     
 
-    }, [])
+    }, [enabled])
 
     return { data, error };
 }

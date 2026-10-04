@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { openModal } from "../store/openModal";
@@ -21,6 +21,7 @@ type Movie = {
     overview: string; // описание
     poster_path: string | null; // постер на русском
     excelTitle?: string;
+    isExcelFallback?: boolean;
 
 };
 
@@ -46,32 +47,53 @@ type KnownForMovie = {
 
 type MovieSliderProps = {
   media: Media[];
-    ratings: MovieRatings[];
-        isLoading?: boolean;
+  ratings: MovieRatings[];
+  isLoading?: boolean;
+  highlightMovieTitle?: string | null;
 };
 
 
-export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderProps ) {
+export function MovieSlider({ media, ratings, isLoading = false, highlightMovieTitle }: MovieSliderProps ) {
     
     const dispatch = useDispatch();
+    const sliderRef = useRef<HTMLDivElement>(null);
     
     const isModalOpen = useSelector((state: RootState) => state.openModal.value)
 
     const [movie_ID, setMovie_ID] = useState<number | null>(null);
     const [excelMovieTitle, setExcelMovieTitle] = useState<string | undefined>();
     const [movieSource, setMovieSource] = useState<MovieSource>('tmdb');
+    const [fallbackMovieTitle, setFallbackMovieTitle] = useState<string | undefined>();
 
     const posterSize = 'w780';
-    const openDescription = (movieID:number, sourceTitle?: string, source: MovieSource = 'tmdb') => {
+    const openDescription = (
+        movieID: number,
+        sourceTitle?: string,
+        source: MovieSource = 'tmdb',
+        fallbackTitle?: string,
+    ) => {
         
         setMovie_ID(movieID)
         setExcelMovieTitle(sourceTitle)
         setMovieSource(source)
+        setFallbackMovieTitle(fallbackTitle)
         
         
         dispatch(openModal())
 
     }
+
+    useEffect(() => {
+        if (!highlightMovieTitle || isLoading) {
+            return;
+        }
+
+        const targetSlide = Array.from(
+            sliderRef.current?.querySelectorAll<HTMLElement>('.movie-slide[data-excel-title]') ?? [],
+        ).find((slide) => slide.dataset.excelTitle === highlightMovieTitle);
+
+        targetSlide?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, [highlightMovieTitle, isLoading, media]);
 
 
     return (
@@ -82,7 +104,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
 
                 <SearchBar/> <br></br>
             </div>         */}
-                <div className="movie-slider-frame relative rounded-3xl shadow-[inset-20] select-auto page-enter">
+                <div ref={sliderRef} className="movie-slider-frame relative rounded-3xl shadow-[inset-20] select-auto page-enter">
                     <div className="movie-grid rounded-3xl bg-gray-600/0">
 
                         {
@@ -113,7 +135,11 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                                     return (
 
                                         
-                                        <div key={key} className="movie-slide p-5">
+                                        <div
+                                            key={key}
+                                            className={`movie-slide p-2${media.excelTitle === highlightMovieTitle ? ' movie-slide-highlight' : ''}`}
+                                            data-excel-title={media.excelTitle}
+                                        >
                                         
                                             <MovieCard
                                                 id={id}
@@ -126,6 +152,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                                                     'source' in media && (media.source === 'tmdb' || media.source === 'kinopoisk')
                                                         ? media.source
                                                         : 'tmdb',
+                                                    media.isExcelFallback ? title : undefined,
                                                 )}
                                             />
 
@@ -157,7 +184,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                                 const placeholderImage = `https://placehold.co/780x1170?text=${russianName}`;
 
                                 return(
-                                    <div key={key} className="movie-slide p-5">
+                                    <div key={key} className="movie-slide p-2">
 
                                         <div className="movie-card w-60 m-auto gap-5 flex flex-col justify-center items-center" key={media.id} >
 
@@ -201,6 +228,7 @@ export function MovieSlider({ media, ratings, isLoading = false }: MovieSliderPr
                         source={movieSource}
                         ratings={ratings}
                         excelMovieTitle={excelMovieTitle}
+                        fallbackTitle={fallbackMovieTitle}
                     />
                     )}
                 </div>

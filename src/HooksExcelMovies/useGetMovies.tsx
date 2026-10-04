@@ -8,6 +8,16 @@ type GoogleSheetsResponse = {
     values?: string[][];
 };
 
+type GoogleSheetsNotesResponse = {
+    sheets?: Array<{
+        data?: Array<{
+            rowData?: Array<{
+                values?: Array<{ note?: string }>;
+            }>;
+        }>;
+    }>;
+};
+
 type GoogleUserResponse = {
     name?: string;
     email?: string;
@@ -27,6 +37,7 @@ export type MovieRatings = {
 
 type LoadedMovieData = {
     movies: string[];
+    movieComments: string[];
     usersRating: MovieRatings[];
     participantNames: string[];
 };
@@ -35,6 +46,7 @@ type CloudflareSessionResponse = {
     userName: string;
     userPicture: string;
     movies: string[];
+    movieComments?: string[];
     ratings: string[][];
     participants: string[];
 };
@@ -46,18 +58,26 @@ const spreadsheetId = '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8';
 
 const normalizeMovieData = (
     movies: string[],
+    movieComments: string[],
     ratings: string[][],
     participants: string[],
-): LoadedMovieData => ({
-    movies: movies.filter((item) => item !== '' && item !== '2025' && item !== '2026'),
-    usersRating: parseMovieRatings(ratings),
-    participantNames: [...new Set(
-        participants
-            .filter((name) => name !== '' && name !== 'Участники')
-            .map((name) => name.trim())
-            .filter(Boolean),
-    )],
-});
+): LoadedMovieData => {
+    const movieRows = movies
+        .map((movie, index) => ({ movie, comment: movieComments[index] ?? '' }))
+        .filter(({ movie }) => movie !== '' && movie !== '2025' && movie !== '2026');
+
+    return {
+        movies: movieRows.map(({ movie }) => movie),
+        movieComments: movieRows.map(({ comment }) => comment),
+        usersRating: parseMovieRatings(ratings),
+        participantNames: [...new Set(
+            participants
+                .filter((name) => name !== '' && name !== 'Участники')
+                .map((name) => name.trim())
+                .filter(Boolean),
+        )],
+    };
+};
 
 const loadGoogleSheets = async (accessToken: string): Promise<LoadedMovieData> => {
     const fetchRange = async (
@@ -77,14 +97,37 @@ const loadGoogleSheets = async (accessToken: string): Promise<LoadedMovieData> =
         return response.json() as Promise<GoogleSheetsResponse>;
     };
 
-    const [moviesResponse, ratingsResponse, participantsResponse] = await Promise.all([
+    const fetchMovieComments = async (): Promise<string[]> => {
+        const query = new URLSearchParams({
+            includeGridData: 'true',
+            ranges: 'Киноклуб (копия)!C5:C',
+            fields: 'sheets(data(rowData(values(note))))',
+        });
+        const response = await fetch(
+            `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?${query}`,
+            { headers: { Authorization: `Bearer ${accessToken}` } },
+        );
+
+        if (!response.ok) {
+            throw new Error('Не удалось загрузить комментарии Google Sheets');
+        }
+
+        const spreadsheet = await response.json() as GoogleSheetsNotesResponse;
+        return spreadsheet.sheets?.[0]?.data?.[0]?.rowData?.map(
+            (row) => row.values?.[0]?.note ?? '',
+        ) ?? [];
+    };
+
+    const [moviesResponse, movieComments, ratingsResponse, participantsResponse] = await Promise.all([
         fetchRange('Киноклуб!C5:C'),
+        fetchMovieComments(),
         fetchRange('Киноклуб!B5:F', 'ROWS'),
         fetchRange('Сводная киноклуба!B3:B50'),
     ]);
 
     return normalizeMovieData(
         moviesResponse.values?.[0] ?? [],
+        movieComments,
         ratingsResponse.values ?? [],
         participantsResponse.values?.[0] ?? [],
     );
@@ -176,6 +219,7 @@ const parseMovieRatings = (rows: string[][]): MovieRatings[] => {
 const useGetMovies = () => {
     const dispatch = useDispatch();
     const [data, setData] = useState<string[]>([]);
+    const [movieComments, setMovieComments] = useState<string[]>([]);
     const [usersRating, setUsersRating] = useState<MovieRatings[]>([]);
     const [participantNames, setParticipantNames] = useState<string[]>([]);
     const [isAuthorized, setIsAuthorized] = useState(false);
@@ -220,6 +264,7 @@ const useGetMovies = () => {
             try {
                 const loaded = await loadGoogleSheets(access_token);
                 setData(loaded.movies);
+                setMovieComments(loaded.movieComments);
                 setUsersRating(loaded.usersRating);
                 setParticipantNames(loaded.participantNames);
             } catch (error) {
@@ -253,6 +298,7 @@ const useGetMovies = () => {
         setUserName('');
         setUserPicture('');
         setData([]);
+        setMovieComments([]);
         setUsersRating([]);
         setParticipantNames([]);
         dispatch(setExcelMovies([]));
@@ -271,11 +317,17 @@ const useGetMovies = () => {
                     return;
                 }
 
-                const loaded = normalizeMovieData(session.movies, session.ratings, session.participants);
+                const loaded = normalizeMovieData(
+                    session.movies,
+                    session.movieComments ?? [],
+                    session.ratings,
+                    session.participants,
+                );
                 setIsAuthorized(true);
                 setUserName(session.userName);
                 setUserPicture(session.userPicture);
                 setData(loaded.movies);
+                setMovieComments(loaded.movieComments);
                 setUsersRating(loaded.usersRating);
                 setParticipantNames(loaded.participantNames);
             })
@@ -313,10 +365,17 @@ const useGetMovies = () => {
                 throw new Error('Сессия Google истекла. Войдите снова');
             }
 
-            const loaded = normalizeMovieData(session.movies, session.ratings, session.participants);
+            const loaded = normalizeMovieData(
+                session.movies,
+                session.movieComments ?? [],
+                session.ratings,
+                session.participants,
+            );
             setUserName(session.userName);
             setUserPicture(session.userPicture);
             setData(loaded.movies);
+            setMovieComments(loaded.movieComments);
+            console.log('Комментарии к фильмам:', loaded.movieComments);
             setUsersRating(loaded.usersRating);
             setParticipantNames(loaded.participantNames);
             return;
@@ -327,6 +386,12 @@ const useGetMovies = () => {
         }
 
         await appendMovieToSheet(accessToken, entry);
+        const loaded = await loadGoogleSheets(accessToken);
+        setData(loaded.movies);
+        setMovieComments(loaded.movieComments);
+        console.log('Комментарии к фильмам:', loaded.movieComments);
+        setUsersRating(loaded.usersRating);
+        setParticipantNames(loaded.participantNames);
     };
 
     useEffect(() => {
@@ -335,6 +400,7 @@ const useGetMovies = () => {
 
     return {
         data,
+        movieComments,
         usersRating,
         participantNames,
         login,

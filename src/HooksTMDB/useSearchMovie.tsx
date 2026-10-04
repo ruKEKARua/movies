@@ -39,14 +39,15 @@ type MovieSliderProps = {
     results: (Media | NormalizedMovie)[];
 };
 
-const useSearchMovie = (searchValue: string) => {
+const useSearchMovie = (searchValue: string, enabled: boolean) => {
 
     const [data, setData] = useState<MovieSliderProps>();
 
 
     useEffect(() => {
 
-        if (!searchValue.trim()) {
+        if (!enabled || !searchValue.trim()) {
+            setData(undefined);
             return;
         }
 
@@ -57,7 +58,7 @@ const useSearchMovie = (searchValue: string) => {
         return () => window.clearTimeout(timeoutId);
     
 
-    }, [searchValue])
+    }, [enabled, searchValue])
 
     return (
         data

@@ -13,6 +13,7 @@ export type NormalizedMovie = {
     backdrop_path: string;
     source: MovieSource;
     excelTitle?: string;
+    isExcelFallback?: boolean;
     release_date?: string;
     vote_average?: number;
     vote_count?: number;

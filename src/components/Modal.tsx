@@ -15,17 +15,19 @@ type ModalProps = {
     source?: MovieSource;
     ratings: MovieRatings[];
     excelMovieTitle?: string;
+    fallbackTitle?: string;
 
 }
 
-const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMovieTitle }: ModalProps) => {
+const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMovieTitle, fallbackTitle }: ModalProps) => {
     
     const dispatch = useDispatch();
     
-    const { data: movieInfo, error: movieError } = useGetMovieInfo(movie_ID, source);
-    const { data: configTMDB, error: configError } = useGetConfiguration();
+    const isFallback = fallbackTitle !== undefined;
+    const { data: movieInfo, error: movieError } = useGetMovieInfo(movie_ID, source, !isFallback);
+    const { data: configTMDB, error: configError } = useGetConfiguration(!isFallback);
     const [isOnline, setIsOnline] = useState(() => navigator.onLine);
-    const isLoading = !movieInfo || !configTMDB;
+    const isLoading = !isFallback && (!movieInfo || !configTMDB);
 
     useEffect(() => {
         if (!isLoading) {
@@ -65,6 +67,49 @@ const Modal = ({isHidden = 'hidden', movie_ID, source = 'tmdb', ratings, excelMo
             
         dispatch(closeModal())
         
+    }
+
+    if (isFallback) {
+        return (
+            <div
+                id="modalWrapper"
+                className={`w-full h-full fixed select-text inset-0 z-50 flex items-center justify-center bg-black/50 ${isHidden}`}
+                onClick={(event) => {
+                    if (event.target === event.currentTarget) {
+                        closeModalHandler();
+                    }
+                }}
+            >
+                <div className="w-full max-w-md rounded-2xl bg-slate-900 p-6 text-white shadow-xl">
+                    <h2 className="mb-5 text-center text-xl font-semibold">{fallbackTitle}</h2>
+                    <h3 className="mb-3 text-center text-lg font-semibold">Оценки Киноклуба</h3>
+                    {excelRatings.length > 0 ? (
+                        <div className="flex flex-col gap-3 text-sm">
+                            {excelRatings.map((rating, index) => (
+                                <p key={`${rating.userName}-${index}`} className="flex items-center justify-between gap-4">
+                                    <span>{rating.userName}</span>
+                                    <span>{rating.scores[0] ?? '—'}</span>
+                                </p>
+                            ))}
+                            {overallRating && (
+                                <p className="border-t border-slate-600 pt-3 text-center font-semibold">
+                                    Средняя оценка: {overallRating}
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        <p className="text-center text-slate-300">Оценки не указаны</p>
+                    )}
+                    <div className="mt-6 flex justify-center">
+                        <Button
+                            label="Закрыть"
+                            onClick={closeModalHandler}
+                            className="rounded-xl bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-500"
+                        />
+                    </div>
+                </div>
+            </div>
+        );
     }
 
     function voteColor(voteAverage:number) {

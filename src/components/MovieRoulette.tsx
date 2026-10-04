@@ -487,6 +487,7 @@ const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
                     source={modalMovie.source}
                     ratings={ratings}
                     excelMovieTitle={modalMovie.excelTitle}
+                    fallbackTitle={modalMovie.isExcelFallback ? movieTitle(modalMovie) : undefined}
                 />
             )}
         </main>

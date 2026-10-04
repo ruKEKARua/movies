@@ -9,6 +9,8 @@ type Movie = {
     title: string; // название на русском
     overview: string; // описание
     poster_path: string; // постер на русском
+    excelTitle?: string;
+    isExcelFallback?: boolean;
 
 };
 

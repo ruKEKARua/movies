@@ -54,6 +54,9 @@ async function findMovieBySearchTitle(title: string) {
         case '🎄 клаус 🎄': 
             title = 'Клаус';
             break;
+        case 'кентавр': 
+            preferredMovieId = 1142871
+            break;
 
         default:
             break;

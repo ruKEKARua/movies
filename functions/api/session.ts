@@ -15,6 +15,16 @@ type GoogleSheetsResponse = {
   values?: string[][];
 };
 
+type GoogleSheetsNotesResponse = {
+  sheets?: Array<{
+    data?: Array<{
+      rowData?: Array<{
+        values?: Array<{ note?: string }>;
+      }>;
+    }>;
+  }>;
+};
+
 const spreadsheetId = '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8';
 
 async function fetchRange(accessToken: string, range: string, majorDimension: 'ROWS' | 'COLUMNS' = 'COLUMNS') {
@@ -31,6 +41,27 @@ async function fetchRange(accessToken: string, range: string, majorDimension: 'R
   return await response.json() as GoogleSheetsResponse;
 }
 
+async function fetchMovieComments(accessToken: string) {
+  const query = new URLSearchParams({
+    includeGridData: 'true',
+    ranges: 'Киноклуб!CN5:CN',
+    fields: 'sheets(data(rowData(values(note))))',
+  });
+  const response = await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}?${query}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } },
+  );
+
+  if (!response.ok) {
+    throw new Error('Не удалось загрузить комментарии Google Sheets');
+  }
+
+  const spreadsheet = await response.json() as GoogleSheetsNotesResponse;
+  return spreadsheet.sheets?.[0]?.data?.[0]?.rowData?.map(
+    (row) => row.values?.[0]?.note ?? '',
+  ) ?? [];
+}
+
 export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
   const stored = await getStoredSession(request, env as AuthEnv);
   if (!stored) {
@@ -42,8 +73,9 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
   try {
     const { sessions } = getOAuthConfig(env as AuthEnv);
     const accessToken = await refreshGoogleAccessToken(stored.session.refreshToken, env as AuthEnv);
-    const [moviesResponse, ratingsResponse, participantsResponse] = await Promise.all([
+    const [moviesResponse, movieComments, ratingsResponse, participantsResponse] = await Promise.all([
       fetchRange(accessToken, 'Киноклуб!C5:C'),
+      fetchMovieComments(accessToken),
       fetchRange(accessToken, 'Киноклуб!B5:F', 'ROWS'),
       fetchRange(accessToken, 'Сводная киноклуба!B3:B50'),
     ]);
@@ -56,6 +88,7 @@ export const onRequestGet = async ({ request, env }: PagesFunctionContext) => {
       userName: stored.session.userName,
       userPicture: stored.session.userPicture,
       movies: moviesResponse.values?.[0] ?? [],
+      movieComments,
       ratings: ratingsResponse.values ?? [],
       participants: participantsResponse.values?.[0] ?? [],
     }, 200, {

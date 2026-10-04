@@ -53,13 +53,17 @@ type Spokenlanguages = {
 }
 
 
-const useGetMovieInfo = (movieId: number, source?: MovieSource) => {
+const useGetMovieInfo = (movieId: number, source?: MovieSource, enabled = true) => {
 
     const [data, setData] = useState<MovieData | MovieDetails | null>(null);
     const [error, setError] = useState<Error | null>(null);
     const requestIdRef = useRef(0);
 
     useEffect(() => {
+        if (!enabled) {
+            return;
+        }
+
         const requestId = ++requestIdRef.current;
 
         getMovieDetailsFromSource(movieId, source)
@@ -78,7 +82,7 @@ const useGetMovieInfo = (movieId: number, source?: MovieSource) => {
                 console.error(err);
                 setError(err instanceof Error ? err : new Error('Не удалось загрузить информацию о фильме'));
             });
-    }, [movieId, source]);
+    }, [enabled, movieId, source]);
 
     return { data, error };
 }

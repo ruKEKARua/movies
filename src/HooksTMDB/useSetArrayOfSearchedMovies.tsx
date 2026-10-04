@@ -26,18 +26,29 @@ const useSetArrayOfSearchedMovies = (titles: string[]) => {
 
       if (cancelled) return;
 
-      const movies = responses
-        .filter(
-          (response): response is PromiseFulfilledResult<Awaited<ReturnType<typeof findMovieBySearchTitle>>> =>
-            response.status === 'fulfilled'
-        )
-        .map((response) => response.value)
-        .filter((movie): movie is NonNullable<typeof movie> => movie !== null)
-        .map((movie) => ({
-          ...movie,
-          poster_path: movie.poster_path ?? '',
-          backdrop_path: movie.backdrop_path ?? '',
-        }));
+      const movies = responses.map((response, index) => {
+        if (response.status === 'fulfilled' && response.value) {
+          return {
+            ...response.value,
+            poster_path: response.value.poster_path ?? '',
+            backdrop_path: response.value.backdrop_path ?? '',
+          };
+        }
+
+        const title = titles[index];
+        return {
+          id: -(index + 1),
+          media_type: 'movie' as const,
+          title,
+          original_title: title,
+          overview: '',
+          poster_path: '',
+          backdrop_path: '',
+          source: 'tmdb' as const,
+          excelTitle: title,
+          isExcelFallback: true,
+        };
+      });
 
       dispatch(setFoundMovies(movies));
       setIsLoaded(true);
