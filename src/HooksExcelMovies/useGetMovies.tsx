@@ -54,7 +54,8 @@ type CloudflareSessionResponse = {
 const isServerAuthEnabled = typeof window !== 'undefined'
     && window.location.protocol === 'https:'
     && !['localhost', '127.0.0.1'].includes(window.location.hostname);
-const spreadsheetId = '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8';
+// Previous spreadsheet ID: '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8'
+const spreadsheetId = '1F4z-LBQWf2tRt64x0yYhUK3-Evk1k8L9R_C93kNiZY8';
 
 const normalizeMovieData = (
     movies: string[],
@@ -86,6 +87,7 @@ const loadGoogleSheets = async (accessToken: string): Promise<LoadedMovieData> =
     ): Promise<GoogleSheetsResponse> => {
         const encodedRange = encodeURIComponent(range);
         const response = await fetch(
+            //https://docs.google.com/spreadsheets/d/1F4z-LBQWf2tRt64x0yYhUK3-Evk1k8L9R_C93kNiZY8/edit?gid=1442549543#gid=1442549543
             `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodedRange}?majorDimension=${majorDimension.toLowerCase()}`,
             { headers: { Authorization: `Bearer ${accessToken}` } },
         );
@@ -100,7 +102,8 @@ const loadGoogleSheets = async (accessToken: string): Promise<LoadedMovieData> =
     const fetchMovieComments = async (): Promise<string[]> => {
         const query = new URLSearchParams({
             includeGridData: 'true',
-            ranges: 'Киноклуб (копия)!C5:C',
+            // Previous range: 'Киноклуб (копия)!C5:C'
+            ranges: 'Киноклуб!C5:C',
             fields: 'sheets(data(rowData(values(note))))',
         });
         const response = await fetch(

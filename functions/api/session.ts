@@ -25,7 +25,8 @@ type GoogleSheetsNotesResponse = {
   }>;
 };
 
-const spreadsheetId = '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8';
+// Previous spreadsheet ID: '1DD6U6fawOirU61-ZuP4GYpoK2p2eLUV2PbJe26uB7A8'
+const spreadsheetId = '1F4z-LBQWf2tRt64x0yYhUK3-Evk1k8L9R_C93kNiZY8';
 
 async function fetchRange(accessToken: string, range: string, majorDimension: 'ROWS' | 'COLUMNS' = 'COLUMNS') {
   const query = new URLSearchParams({ majorDimension: majorDimension.toLowerCase() });
@@ -44,7 +45,8 @@ async function fetchRange(accessToken: string, range: string, majorDimension: 'R
 async function fetchMovieComments(accessToken: string) {
   const query = new URLSearchParams({
     includeGridData: 'true',
-    ranges: 'Киноклуб!CN5:CN',
+    // Previous range: 'Киноклуб!CN5:CN'
+    ranges: 'Киноклуб!C5:C',
     fields: 'sheets(data(rowData(values(note))))',
   });
   const response = await fetch(
